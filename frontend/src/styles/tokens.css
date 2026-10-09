@@ -1,0 +1,35 @@
+/*:root a single source of truth—if you change a value here, 
+it instantly updates across your entire application. */
+
+:root {
+    --color-primary: #0f4c5c;
+    --color-action: #e36414;
+    --color-bg: #fbfcf8;
+    --color-surface: #f4f1ea;
+    --color-ink: #1d2a30;
+    --color-muted: #6b7b83;
+    --color-line: #d9e2e3;
+    --color-white: #ffffff;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    --radius-chip: 99px;
+    --radius-card: 12px;
+    --radius-sheet: 20px;
+
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-heading: 'Manrope', 'DM Sans', system-ui, sans-serif;
+    --text-sm: 12px;
+    --text-base: 14px;
+    --text-md: 16px;
+    --text-lg: 20px;
+    --text-xl: 28px;
+    --text-display: 48px;
+
+    --content-max: 1200px;
+}
