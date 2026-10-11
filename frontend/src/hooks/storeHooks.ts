@@ -4,4 +4,8 @@ import type { AppDispatch, RootState } from '../store';
 
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
+<<<<<<< HEAD
+=======
+
+>>>>>>> feat/redux-store
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
