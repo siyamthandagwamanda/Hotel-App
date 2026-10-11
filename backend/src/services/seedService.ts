@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 import { pool } from '../config/pool.js';
 
-type Setting = 'beach' | 'city' | 'safari' | 'mountain' | 'countryside' | 'suburban-hills';
+type Setting = 'beach' | 'city' | 'safari' | 'mountain' | 'countryside' ;
 
 type SeedRoom = {
   name: string;
@@ -86,7 +86,7 @@ const hotels: SeedHotel[] = [
     latitude: -29.5694,
     longitude: 30.2985,
     starRating: 3.5,
-    setting: 'suburban-hills',
+    setting: 'city',
     ratingAvg: 8.2,
     reviewCount: 86,
     amenities: ['Fast Wi-Fi', 'Pool', 'Pet friendly', 'Free parking'],
@@ -281,7 +281,7 @@ export async function seedDatabase(): Promise<void> {
 
         
         await client.query(
-          `INSERT INTO room_inventory (room_type_id, stay_date, units_available)
+          `INSERT INTO rooms_inventory (room_type_id, stay_date, units_available)
            SELECT $1, d::date, $2
            FROM generate_series(CURRENT_DATE, CURRENT_DATE + 364, interval '1 day') AS d
            ON CONFLICT DO NOTHING`,
