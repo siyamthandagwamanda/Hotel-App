@@ -1,11 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-<<<<<<< HEAD
-export interface Visitors{
-=======
 export interface Guests{
->>>>>>> feat/redux-store
     adults: number;
     children: number;
     rooms: number;
@@ -23,11 +19,7 @@ interface SearchState {
     city: string;
     checkIn: string | null;
     checkOut: string | null;
-<<<<<<< HEAD
-    visitors: Visitors;
-=======
     guests: Guests;
->>>>>>> feat/redux-store
     filters: Filters;
     sort: 'recommended' | 'price_asc' | 'price_desc' | 'rating';
 }
@@ -36,11 +28,7 @@ const initialState: SearchState = {
     city: '',
     checkIn: null,
     checkOut: null,
-<<<<<<< HEAD
-    visitors: {adults: 2, children: 0, rooms: 1},
-=======
     guests: {adults: 2, children: 0, rooms: 1},
->>>>>>> feat/redux-store
     filters:{
         minPrice: null,
         maxPrice: null,
@@ -63,13 +51,8 @@ const searchSlice = createSlice({
             state.checkOut = action.payload.checkOut;
         },
 
-<<<<<<< HEAD
-        setVisitors(state, action: PayloadAction<Visitors>){
-            state.visitors = action.payload;
-=======
         setGuests(state, action: PayloadAction<Guests>){
             state.guests = action.payload;
->>>>>>> feat/redux-store
         },
 
         setFilters(state, action: PayloadAction<Filters>){
@@ -89,10 +72,6 @@ const searchSlice = createSlice({
     },
 });
 
-<<<<<<< HEAD
-export const {setCity, setDates, setVisitors, setFilters, clearFilters, setSort, setAgainSearch,} = searchSlice.actions;
-=======
 export const {setCity, setDates, setGuests, setFilters, clearFilters, setSort, setAgainSearch,} = searchSlice.actions;
->>>>>>> feat/redux-store
 
 export default searchSlice.reducer;
