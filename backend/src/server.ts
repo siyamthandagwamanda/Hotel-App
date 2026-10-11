@@ -15,11 +15,6 @@ const PORT = 3000;
 console.log('🔄 Setting up database tables...');
 runMigrations(); 
 
-
-console.log('🔄 Setting up database tables...');
-runMigrations(); 
-
-
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
