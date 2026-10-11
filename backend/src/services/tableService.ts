@@ -189,7 +189,6 @@ export async function runMigrations(): Promise<void> {
     await createEnums(client);
     await createTables(client);
     await client.query('COMMIT');
-    
     console.log('Database schema migrations executed successfully.');
 
   } catch (error) {
@@ -197,7 +196,7 @@ export async function runMigrations(): Promise<void> {
     await client.query('ROLLBACK');
     console.error('Migration failed! Rolling back changes:', error);
     throw error;
-
+    
   } finally {
     client.release();
   }

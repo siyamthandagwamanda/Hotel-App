@@ -11,12 +11,20 @@ app.use(express.json());
 app.use('/api', statusRouter);
 
 const PORT = 3000;
+<<<<<<< HEAD
 
 
 console.log('🔄 Setting up database tables...');
 runMigrations(); 
 
+=======
+>>>>>>> feat/database-tables
 
+// 1. Run database setup scripts first
+console.log('🔄 Setting up database tables...');
+await runMigrations(); 
+
+// 2. Start listening once the database is ready
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
