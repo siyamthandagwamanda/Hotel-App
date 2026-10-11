@@ -7,22 +7,14 @@ export interface User{
     name: string;
     phone: string | null;
     avatar: string | null;
-<<<<<<< HEAD
-    role: 'visitor' | 'admin';
-=======
     role: 'guest' | 'admin';
->>>>>>> feat/redux-store
 }
 
 interface AuthState{ user: User | null; 
     status: 'idle' | 'loading' | 'authenticated' | 'error';
 };
 
-<<<<<<< HEAD
-const initialState: AuthState = { user: null, status: 'idle', };
-=======
 const initialState: AuthState = { user: null,status: 'idle', };
->>>>>>> feat/redux-store
 
 const authSlice = createSlice({
 
