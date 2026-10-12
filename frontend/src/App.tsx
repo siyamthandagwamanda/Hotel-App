@@ -2,7 +2,7 @@ import { useGetShelvesQuery } from './hotel/hotelApi';
 
 function App() {
   const { data, isLoading, isError } = useGetShelvesQuery('Pietermaritzburg');
-
+   
   if (isLoading) {
     return <p>Loading shelves...</p>;
   }
