@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from './slices/authSlice';
 import searchReducer from './slices/searchSlice';
 import journeyReducer from './slices/journeySlice'
+import hotelReducer from './slices/hotelSlices'
 
 
 export const store = configureStore({
@@ -9,7 +10,7 @@ export const store = configureStore({
         auth: authReducer,
         search: searchReducer,
         journey: journeyReducer,
-       
+        hotel: hotelReducer
     },
 });
 
