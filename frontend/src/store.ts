@@ -10,7 +10,7 @@ export const store = configureStore({
         auth: authReducer,
         search: searchReducer,
         journey: journeyReducer,
-        hotel: hotelReducer
+        hotel: hotelReducer,
     },
 });
 
