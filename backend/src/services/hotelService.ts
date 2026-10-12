@@ -35,7 +35,8 @@ const petFriendlyClause = `EXISTS (
 )`;
 
 const shelfDefinitions: ShelfDefinition[] = [
-  { id: 'near-you', title: 'Near you', where: 'h.city ILIKE \$1', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: true },
+  
+  { id: 'near-you', title: 'Near you', where: '(h.city ILIKE \$1 OR h.province ILIKE \$1)', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: true },
   { id: 'top-rated', title: 'Top rated', where: '', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
   { id: 'best-value', title: 'Best value', where: '', having: 'TRUE', orderBy: 'from_price_cents ASC', useCity: false },
   { id: 'beach', title: 'Beach escapes', where: "h.setting = 'beach'", having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
@@ -53,7 +54,9 @@ async function fetchShelfHotels(shelf: ShelfDefinition, city: string): Promise<H
 
   const params: string[] = [];
   if (shelf.useCity) {
-    params.push(`%${city}%`);
+
+    const searchString = city === 'Pietermaritzburg' ? 'KwaZulu-Natal' : city;
+    params.push(`%${searchString}%`);
   }
 
   const sql = `
@@ -78,7 +81,6 @@ async function fetchShelfHotels(shelf: ShelfDefinition, city: string): Promise<H
     LIMIT 10`;
 
   const result = await pool.query(sql, params);
-  
 
   return result.rows.map((row) => ({
     id: Number(row.id),
