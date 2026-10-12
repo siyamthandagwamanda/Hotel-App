@@ -33,7 +33,7 @@ export const hotelApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
   endpoints: (builder) => ({
     getShelves: builder.query<ShelvesResponse, string>({
-      query: (city) => `/shelves?city=${encodeURIComponent(city)}`,
+      query: (city) => `/hotels/shelves?city=${encodeURIComponent(city)}`,
     }),
   }),
 });
