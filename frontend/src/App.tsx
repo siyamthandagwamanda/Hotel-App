@@ -1,23 +1,27 @@
-import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "./hooks/storeHooks";
-import { fetchShelvesByCity } from "./slices/hotelSlices";
-
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from './hooks/storeHooks.js';
+import { fetchShelvesByCity } from './slices/hotelSlices.js';
 
 function App() {
-    const dispatch = useAppDispatch();
-    const {shelves, isLoading, error} = useAppSelector((state) => state.hotel);
+  const dispatch = useAppDispatch();
+  
 
-    useEffect(() => {
-      dispatch(fetchShelvesByCity('Pietermaritzburg'));
-    }, [dispatch]);
+  const { shelves, isLoading, error } = useAppSelector((state) => state.hotel);
 
-    if (isLoading){
-      return <p>Loading shelves...</p>;
-    }
+  
+  useEffect(() => {
+    dispatch(fetchShelvesByCity('Pietermaritzburg'));
+  }, [dispatch]);
 
-    if (error || !shelves || shelves.length === 0){
-      return <p>Could not load shelves</p>;
-    }
+  
+  if (isLoading) {
+    return <p>Loading shelves...</p>;
+  }
+
+ 
+  if (error || !shelves || shelves.length === 0) {
+    return <p>Could not load shelves.</p>;
+  }
 
   return (
     <main>
