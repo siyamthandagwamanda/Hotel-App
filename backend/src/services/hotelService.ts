@@ -35,8 +35,7 @@ const petFriendlyClause = `EXISTS (
 )`;
 
 const shelfDefinitions: ShelfDefinition[] = [
-  
-  { id: 'near-you', title: 'Near you', where: '(h.city ILIKE \$1 OR h.province ILIKE \$1)', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: true },
+  { id: 'near-you', title: 'Near you', where: 'h.province = $1', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: true },
   { id: 'top-rated', title: 'Top rated', where: '', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
   { id: 'best-value', title: 'Best value', where: '', having: 'TRUE', orderBy: 'from_price_cents ASC', useCity: false },
   { id: 'beach', title: 'Beach escapes', where: "h.setting = 'beach'", having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
@@ -46,6 +45,15 @@ const shelfDefinitions: ShelfDefinition[] = [
   { id: 'pet-friendly', title: 'Pet friendly', where: petFriendlyClause, having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
 ];
 
+async function findProvince(city: string): Promise<string | null> {
+  const escaped = city.replace(/[\\%_]/g, '\\$&');
+  const result = await pool.query(
+    'SELECT province FROM hotels WHERE city ILIKE $1 OR province ILIKE $1 LIMIT 1',
+    [`%${escaped}%`],
+  );
+  return result.rows[0]?.province ?? null;
+}
+
 async function fetchShelfHotels(shelf: ShelfDefinition, city: string): Promise<HotelCardData[]> {
   let whereText = "h.status = 'published'";
   if (shelf.where !== '') {
@@ -54,9 +62,9 @@ async function fetchShelfHotels(shelf: ShelfDefinition, city: string): Promise<H
 
   const params: string[] = [];
   if (shelf.useCity) {
-
-    const searchString = city === 'Pietermaritzburg' ? 'KwaZulu-Natal' : city;
-    params.push(`%${searchString}%`);
+    const province = await findProvince(city);
+    if (!province) return [];
+    params.push(province);
   }
 
   const sql = `
@@ -97,12 +105,23 @@ async function fetchShelfHotels(shelf: ShelfDefinition, city: string): Promise<H
 }
 
 export async function getShelves(city: string): Promise<Shelf[]> {
-  const shelves: Shelf[] = [];
-  for (const definition of shelfDefinitions) {
-    const hotels = await fetchShelfHotels(definition, city);
-    if (hotels.length > 0) {
-      shelves.push({ id: definition.id, title: definition.title, hotels });
-    }
+  const results = await Promise.all(
+    shelfDefinitions.map(async (definition) => ({
+      definition,
+      hotels: await fetchShelfHotels(definition, city),
+    })),
+  );
+
+  const nearYou = results.find((r) => r.definition.id === 'near-you');
+  if (nearYou) {
+    const isSearched = (h: HotelCardData) =>
+      Number(h.city.toLowerCase() === city.toLowerCase());
+    nearYou.hotels.sort(
+      (a, b) => isSearched(b) - isSearched(a) || b.ratingAvg - a.ratingAvg,
+    );
   }
-  return shelves;
+
+  return results
+    .filter((r) => r.hotels.length > 0)
+    .map((r) => ({ id: r.definition.id, title: r.definition.title, hotels: r.hotels }));
 }

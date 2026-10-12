@@ -11,7 +11,7 @@ export interface HotelCardData{
     name: string;
     city: string;
     province: string;
-    starsRating: number;
+    starRating: number;
     ratingAvg: number;
     reviewCount: number;
     setting: string;
@@ -19,18 +19,18 @@ export interface HotelCardData{
     images: HotelImage[];
 }
 
-export interface shelf{
+export interface Shelf{
     id: string;
     title: string;
     hotels: HotelCardData[];
 }
 
 export interface ShelvesResponse{
-    shelves: shelf[];
+    shelves: Shelf[];
 }
 
 interface HotelState{
-    shelves: shelf[];
+    shelves: Shelf[];
     isLoading: boolean;
     error: string | null;
 }

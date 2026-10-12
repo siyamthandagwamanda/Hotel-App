@@ -1,31 +1,24 @@
 import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from './hooks/storeHooks.js';
-import { fetchShelvesByCity } from './slices/hotelSlices.js';
+import { useAppDispatch, useAppSelector } from './hooks/storeHooks';
+import { fetchShelvesByCity } from './slices/hotelSlices';
 
 function App() {
+ 
+  
   const dispatch = useAppDispatch();
-  
+  const { shelves, isLoading, error } = useAppSelector((state) => state.hotels);
 
-  const { shelves, isLoading, error } = useAppSelector((state) => state.hotel);
-
-  
   useEffect(() => {
     dispatch(fetchShelvesByCity('Pietermaritzburg'));
   }, [dispatch]);
 
-  
-  if (isLoading) {
-    return <p>Loading shelves...</p>;
-  }
-
- 
-  if (error || !shelves || shelves.length === 0) {
-    return <p>Could not load shelves.</p>;
-  }
+  if (isLoading) return <p>Loading stays...</p>;
+  if (error) return <p>Could not load stays: {error}</p>;
 
   return (
     <main>
-      <h1>StayHop</h1>
+      <h1>NextStay</h1>
+      {shelves.length === 0 && <p>No stays found.</p>}
       {shelves.map((shelf) => (
         <section key={shelf.id}>
           <h2>{shelf.title}</h2>
