@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { loadLandingSeen, saveLandingSeen } from '../utils/storage';
 
 interface JourneyState{
     landingScreen: boolean;
@@ -7,8 +8,9 @@ interface JourneyState{
     rowScrollPositions: Record<string, number>;
 }
 
+// Automatically loads from localStorage on app boot
 const initialState: JourneyState = {
-    landingScreen: false,
+    landingScreen: loadLandingSeen(),
     currentPage: 0,
     rowScrollPositions: {},
 };
@@ -16,8 +18,10 @@ const initialState: JourneyState = {
 const journeySlice = createSlice({
     name: 'userJourney', initialState,
     reducers: {
+// Automatically persists to localStorage on state change        
         markLandingSeen(state){
             state.landingScreen = true;
+            saveLandingSeen(true)
         },
         
         setCurrentPage(state, action: PayloadAction<number>){
