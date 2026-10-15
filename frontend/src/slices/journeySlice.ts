@@ -20,7 +20,7 @@ const journeySlice = createSlice({
 // Automatically persists to localStorage on state change        
         markLandingSeen(state){
             state.landingScreen = true;
-            
+          
         },
         
         setCurrentPage(state, action: PayloadAction<number>){

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Logo from '../components/shared/Logo.js';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks.js';
 import { setCity, setDates, setGuests } from '../slices/searchSlice.js';
-import './LandingPage.css';
+import "../styles/LandingPage.module.css";
 
 interface LandingPageProps {
   onEnter: () => void;
