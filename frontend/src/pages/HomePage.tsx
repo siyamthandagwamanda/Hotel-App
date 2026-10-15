@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Logo from "../components/shared/Logo";
 import { useAppSelector } from "../hooks/storeHooks";
-import { selectShelfCity } from "../hotel/searchSelector";
 import "../styles/HomePage.module.css";
 
 interface HomePageProps {
@@ -25,8 +24,6 @@ function describeSearch(
 }
 
 export function HomePage({onBackToLanding}: HomePageProps){
-
-    const shelfCity = useAppSelector(selectShelfCity);
 
     const city = useAppSelector((state) => state.search.city);
 
