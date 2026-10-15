@@ -2,6 +2,7 @@ import LandingPage from "./LandingPage";
 import HomePage from "./HomePage";
 import { useAppDispatch, useAppSelector } from "../hooks/storeHooks";
 import {setLandingScreen} from "./../slices/journeySlice";
+<<<<<<< HEAD
 import './../styles/EntryPage.module.css';
 
 export function EntryPage(){
@@ -43,3 +44,6 @@ export function EntryPage(){
 }
 
 export default EntryPage
+=======
+import './../styles/EntryPage.module.css';
+>>>>>>> feat/landing-page
