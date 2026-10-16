@@ -1,0 +1,11 @@
+.chip-bar {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chip-bar::-webkit-scrollbar {
+  display: none;
+}
