@@ -1,6 +1,6 @@
-import Chip from '../../components/shared/Chip.js';
+import Chip from '../../components/shared/Chip';
 import type { DeckChip } from './../../utils/homePageUtils';
-import './ChipBar.css';
+import './../../styles/Chip.module.css';
 
 interface ChipBarProps {
   chips: DeckChip[];

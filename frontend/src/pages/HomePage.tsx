@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import Logo from '../components/shared/Logo.js';
+import Logo from '../components/shared/Logo';
 import ChipBar from './../components/shared/ChipBar';
 import DeckPager from './../components/shared/HomePaper';
 import { buildDeckPages, deckChips } from './../utils/homePageUtils';
 import { setCurrentPage } from './../slices/journeySlice';
 import { useAppDispatch, useAppSelector } from './../hooks/storeHooks';
-import { selectShelfCity } from './../hotel/searchSelector';
-import './HomeDeckPage.css';
+import './../styles/HomePage.module.css';
 
 interface HomeDeckPageProps {
   onBackToLanding: () => void;
@@ -33,8 +32,7 @@ function describeSearch(
 
 export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
   const dispatch = useAppDispatch();
-  const shelfCity = useAppSelector(selectShelfCity);
-  
+ 
   
   const city = useAppSelector((state) => state.search.city);
   const checkIn = useAppSelector((state) => state.search.checkIn);
@@ -52,7 +50,7 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
   const safePage = pages.length === 0 ? 0 : Math.min(Math.max(currentPage, 0), pages.length - 1);
   const activePage = pages.length > 0 ? pages[safePage] : null;
 
- 
+  // Filter chips to display only the choices available in the current data payload
   const visibleChips = deckChips.filter((chip) => 
     pages.some((page) => page.id === chip.pageId)
   );

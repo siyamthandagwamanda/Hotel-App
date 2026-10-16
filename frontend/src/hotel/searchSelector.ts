@@ -7,3 +7,5 @@ export function selectShelfCity(state: RootState): string {
     return city === '' ? 'Pietermaritzburg' : city;
 
 }
+
+export default selectShelfCity;
