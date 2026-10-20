@@ -1,4 +1,4 @@
-import { pool } from '../config/pool.js';
+import { pool } from '../config/pool';
 
 export interface HotelCardData {
   id: number;
@@ -28,6 +28,11 @@ interface ShelfDefinition {
   useCity: boolean;
 }
 
+export type Amenity = {
+  id: number;
+  name: string;
+}
+
 const petFriendlyClause = `EXISTS (
   SELECT 1 FROM hotel_amenities ha
   JOIN amenities a ON a.id = ha.amenity_id
@@ -35,36 +40,38 @@ const petFriendlyClause = `EXISTS (
 )`;
 
 const shelfDefinitions: ShelfDefinition[] = [
-  { id: 'near-you', title: 'Near you', where: 'h.province = $1', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: true },
+  
+  { id: 'near-you', title: 'Near you', where: 'h.province = \$1', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: true },
   { id: 'top-rated', title: 'Top rated', where: '', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
-  { id: 'best-value', title: 'Best value', where: '', having: 'TRUE', orderBy: 'from_price_cents ASC', useCity: false },
+  { id: 'best-value', title: 'Best value', where: '', having: 'TRUE', orderBy: 'MIN(rt.base_price_cents) ASC', useCity: false },
   { id: 'beach', title: 'Beach escapes', where: "h.setting = 'beach'", having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
   { id: 'city', title: 'City stays', where: "h.setting = 'city'", having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
   { id: 'safari', title: 'Safari and nature', where: "h.setting IN ('safari', 'mountain')", having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
-  { id: 'under-1000', title: 'Under R1000', where: '', having: 'MIN(rt.base_price_cents) <= 100000', orderBy: 'from_price_cents ASC', useCity: false },
+  { id: 'under-1000', title: 'Under R1000', where: '', having: 'MIN(rt.base_price_cents) <= 100000', orderBy: 'MIN(rt.base_price_cents) ASC', useCity: false },
   { id: 'pet-friendly', title: 'Pet friendly', where: petFriendlyClause, having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
 ];
 
-async function findProvince(city: string): Promise<string | null> {
+export async function findProvince(city: string): Promise<string | null> {
   const escaped = city.replace(/[\\%_]/g, '\\$&');
   const result = await pool.query(
-    'SELECT province FROM hotels WHERE city ILIKE $1 OR province ILIKE $1 LIMIT 1',
+    'SELECT province FROM hotels WHERE city ILIKE \$1 OR province ILIKE \$1 LIMIT 1',
     [`%${escaped}%`],
   );
   return result.rows[0]?.province ?? null;
 }
 
-async function fetchShelfHotels(shelf: ShelfDefinition, city: string): Promise<HotelCardData[]> {
-  let whereText = "h.status = 'published'";
-  if (shelf.where !== '') {
-    whereText = `${whereText} AND ${shelf.where}`;
-  }
 
+export async function fetchShelfHotels(shelf: ShelfDefinition, province: string | null): Promise<HotelCardData[]> {
+  let whereText = "h.status = 'published'";
   const params: string[] = [];
+
   if (shelf.useCity) {
-    const province = await findProvince(city);
+   
     if (!province) return [];
     params.push(province);
+    whereText = `${whereText} AND ${shelf.where}`;
+  } else if (shelf.where !== '') {
+    whereText = `${whereText} AND ${shelf.where}`;
   }
 
   const sql = `
@@ -105,15 +112,18 @@ async function fetchShelfHotels(shelf: ShelfDefinition, city: string): Promise<H
 }
 
 export async function getShelves(city: string): Promise<Shelf[]> {
+
+  const province = city ? await findProvince(city) : null;
+
   const results = await Promise.all(
     shelfDefinitions.map(async (definition) => ({
       definition,
-      hotels: await fetchShelfHotels(definition, city),
+      hotels: await fetchShelfHotels(definition, province),
     })),
   );
 
   const nearYou = results.find((r) => r.definition.id === 'near-you');
-  if (nearYou) {
+  if (nearYou && city) {
     const isSearched = (h: HotelCardData) =>
       Number(h.city.toLowerCase() === city.toLowerCase());
     nearYou.hotels.sort(
@@ -124,4 +134,13 @@ export async function getShelves(city: string): Promise<Shelf[]> {
   return results
     .filter((r) => r.hotels.length > 0)
     .map((r) => ({ id: r.definition.id, title: r.definition.title, hotels: r.hotels }));
+}
+
+export async function getAmenities(): Promise<Amenity[]>{
+  const result = await pool.query('SELECT id, name FROM amenities ORDER BY name');
+
+  return result.rows.map((row) => ({
+    id: Number(row.id),
+    name: row.name as string,
+  }));
 }
