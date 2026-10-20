@@ -42,8 +42,10 @@ function readDate(value: unknown, name: string): string | null {
     if (text === null){
         return null;
     }
-    const parsed = new Date(`${text}TOO:00:00Z`);
-    const looksRight = /^\d{4} - \d{2} - \d{2}\$/.test(text);
+
+    const parsed = new Date(`${text}T00:00:00Z`);
+   
+    const looksRight = /^\d{4}-\d{2}-\d{2}\$/.test(text);
 
     if (!looksRight || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== text){
         throw fail(`${name} must be a real date written as YYYY-MM-DD`)
@@ -95,7 +97,8 @@ function readCursor(value: unknown): SearchCursor | null {
     try{
         const decoded = JSON.parse(Buffer.from(text, 'base64url').toString('utf-8'));
 
-        const valueOk = typeof decoded.v === 'string' && /^-?\d+(\. \d+)?\$/.test(decoded.v);
+        
+        const valueOk = typeof decoded.v === 'string' && /^-?\d+(\.\d+)?\$/.test(decoded.v);
 
         const idOk = Number.isInteger(decoded.id) && decoded.id > 0;
 
@@ -103,14 +106,14 @@ function readCursor(value: unknown): SearchCursor | null {
             return {value: decoded.v, id: decoded.id};
         }
     }catch{
-
+       
     }
     throw fail('cursor is not valid');
 }
 
 function nightsBetween(checkIn: string, checkOut: string): number{
-
-    const start = Date.parse(`${checkIn}T00: 00: 00Z`);
+  
+    const start = Date.parse(`${checkIn}T00:00:00Z`);
     const end = Date.parse(`${checkOut}T00:00:00Z`);
 
     return Math.round((end - start) / 86400000);
@@ -150,7 +153,8 @@ export function parseSearchQuery(query: Record<string, unknown>): SearchParams{
         throw fail('At least one adult is needed per room');
     }
 
-    const minPrice = readInteger(query.minPrie, 'minPrice', 0, MAX_PRICE_RAND);
+
+    const minPrice = readInteger(query.minPrice, 'minPrice', 0, MAX_PRICE_RAND);
     const maxPrice =  readInteger(query.maxPrice, 'maxPrice', 0, MAX_PRICE_RAND);
 
     if (minPrice !== null && maxPrice !== null && minPrice > maxPrice){
@@ -186,5 +190,4 @@ export function parseSearchQuery(query: Record<string, unknown>): SearchParams{
         sort: sort,
         cursor: readCursor(query.cursor),
     };
-
 }
