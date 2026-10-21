@@ -1,22 +1,29 @@
 import { Router } from 'express';
-import { getShelves } from '../services/hotelService.js';
+import { getAmenities, getShelves } from '../services/hotelService';
+import { searchHotels } from '../services/searchService';
+import { parseSearchQuery } from '../services/searchParams';
 
 const router = Router();
 
-// Fetches categorized dashboard collections, falling back to 'Pietermaritzburg' if empty
-router.get('/shelves', async (req, res) => {
-  
-  const queryCity = req.query.city;
+//filtering and pagination search endpoint
+router.get('/', async (req , res) => {
+  const params = parseSearchQuery(req.query);
+  const result = await searchHotels(params);
+  res.json(result)
+});
 
-  const city = typeof queryCity === 'string' && queryCity.trim() !== '' 
-
-    ? queryCity.trim() 
+router.get('/shelves', async (req , res) => {
+  const city = typeof req.query.city === 'string' && req.query.city.trim() !== ''
+    ? req.query.city.trim()
     : 'Pietermaritzburg';
 
-  console.log(`Fetching shelves for city: "${city}"`);
   const shelves = await getShelves(city);
-  
-  res.json({ shelves });
+  res.json({ shelves })
+});
+
+router.get('/amenities', async (req , res) => {
+  const amenities = await getAmenities();
+  res.json({amenities});
 });
 
 export default router;
