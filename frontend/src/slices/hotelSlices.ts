@@ -1,5 +1,6 @@
 import {createSlice, createAsyncThunk,} from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import { buildSearchQuery } from '../utils/searchQueryUtils';
 
 export interface HotelImage{
     url: string;
@@ -25,66 +26,49 @@ export interface Shelf{
     hotels: HotelCardData[];
 }
 
+export interface Amenity{
+    id: number;
+    name: string;
+}
+
+export interface SearchArgs{
+    city: string;
+    checkIn: string | null;
+    checkOut: string | null;
+    adults: number;
+    children: number;
+    rooms: number;
+    minPrice: number | null;
+    maxPrice: number | null;
+    stars: number | null;
+    amenityIds: number[];
+    propertyType: string | null;
+    sort: string;
+    cursor: string | null;
+}
+
 export interface ShelvesResponse{
     shelves: Shelf[];
 }
 
 interface HotelState{
     shelves: Shelf[];
+    amenities: Amenity[];
+    searchResults: HotelCardData[]
+    nextCursor: string | null;
     isLoading: boolean;
     error: string | null;
 }
 
 const initialState: HotelState = {
     shelves: [],
+    amenities: [],
+    searchResults: [],
+    nextCursor: null,
     isLoading: false,
     error: null,
 };
 
+
 //Asynchronous Thunk for fetching localized dashboard shelves
 
-export const fetchShelvesByCity = createAsyncThunk<
-    ShelvesResponse,
-    string,
-    {rejectValue: string}
->(
-    'hotels/fetchShelvesByCity',
-    async (city, { rejectWithValue }) => {
-        try {
-            const baseUrl = import.meta.env.VITE_API_URL;
-            const response = await fetch(`${baseUrl}/hotels/shelves?city=${encodeURIComponent(city)}`);
-
-            if (!response.ok){
-                throw new Error(`Server responded with status: ${response.status}`);
-            }
-
-            return (await response.json()) as ShelvesResponse;
-        } catch (error: any) {
-            return rejectWithValue(error.message || 'Failed to communicate with server');
-        }
-    }
-);
-
-const hotelSlice = createSlice({
-    name: 'hotels',
-    initialState,
-    reducers: {},
-    extraReducers: (builder) => {
-        builder
-            .addCase(fetchShelvesByCity.pending, (state) => {
-                state.isLoading = true;
-                state.error = null;
-            })
-            .addCase(fetchShelvesByCity.fulfilled, (state, action: PayloadAction<ShelvesResponse>) => {
-                state.shelves = action.payload.shelves;
-                state.isLoading = false;
-            })
-            .addCase(fetchShelvesByCity.rejected, (state, action) => {
-                state.isLoading = false;
-                state.error = action.payload ?? 'Something went wrong';
-            });
-   },
-});
-
-
-export default hotelSlice.reducer;
