@@ -1,5 +1,9 @@
 import { useState } from 'react';
+<<<<<<< HEAD
 import Logo from '../components/shared/Logo';
+=======
+import Logo from '../components/shared/Logo.js';
+>>>>>>> feat/search-ui
 import { useAppSelector } from '../hooks/storeHooks';
 import { useNavigate } from 'react-router-dom';
 import './SearchResultsPage.css';
@@ -7,6 +11,7 @@ import './SearchResultsPage.css';
 export function SearchResultsPage() {
   const navigate = useNavigate();
 
+<<<<<<< HEAD
 
   const { city, checkIn, checkOut, guests } = useAppSelector((state) => state.search);
   
@@ -15,26 +20,52 @@ export function SearchResultsPage() {
   const [openedId, setOpenedId] = useState<number | null>(null);
 
 
+=======
+  // 1. Reaches directly into the single source of truth for travel query criteria
+  const { city, checkIn, checkOut, guests } = useAppSelector((state) => state.search);
+  
+  // 2. Extracts response arrays and loading flags flatly from your search slice node
+  const { results, isLoading, error } = useAppSelector((state) => state.search);
+  const [openedId, setOpenedId] = useState<number | null>(null);
+
+  // Fallback default value string parsing if criteria are blank
+>>>>>>> feat/search-ui
   const searchSummaryText = `${city || 'All Destinations'} · ${checkIn && checkOut ? `checkIn to {checkOut}` : 'Flexible Dates'} · ${guests.adults} ${guests.adults === 1 ? 'guest' : 'guests'}`;
 
   return (
     <div className="results-page">
+<<<<<<< HEAD
     
+=======
+      {/* Search Layout Top Header Navigation Bar */}
+>>>>>>> feat/search-ui
       <header className="results-header">
         <button type="button" className="results-back-btn" onClick={() => navigate('/')}>
           ← Back
         </button>
         <div className="results-summary-pill">
+<<<<<<< HEAD
           <Logo colour="dark" />
+=======
+          <Logo tone="dark" />
+>>>>>>> feat/search-ui
           <span className="results-pill-text">{searchSummaryText}</span>
         </div>
       </header>
 
+<<<<<<< HEAD
     
       <main className="results-main">
         <h1 className="results-title">Available Accommodations</h1>
 
    
+=======
+      {/* Main Core Catalogue Frame Content */}
+      <main className="results-main">
+        <h1 className="results-title">Available Accommodations</h1>
+
+        {/* Dynamic Operational Safety Guard Clauses */}
+>>>>>>> feat/search-ui
         {isLoading && <p className="results-message">Searching for optimal stays...</p>}
         {error && <p className="results-message results-message-error">Could not fetch properties: {error}</p>}
         
@@ -48,7 +79,11 @@ export function SearchResultsPage() {
           </p>
         )}
 
+<<<<<<< HEAD
      
+=======
+        {/* Flat Grid Matrix Rendering Engine */}
+>>>>>>> feat/search-ui
         {!isLoading && !error && results && results.length > 0 && (
           <div className="results-grid">
             {results.map((hotel) => (
