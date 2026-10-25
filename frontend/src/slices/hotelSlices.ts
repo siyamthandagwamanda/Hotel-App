@@ -118,40 +118,41 @@ const hotelSlice = createSlice({
         }
     },
 
-    extraReducers: (builder) => {
-        builder
-           .addMatcher(
-                (action) => action.type.startsWith('hotel/') && action.type.endsWith('/pending'),
-                (state) => {
-                    state.isLoading = true;
-                    state.error = null;
-                }
-           )
+      // Make sure your state slice extraReducers block matches this exact order:
+  extraReducers: (builder) => {
+    builder
+      // 1. ALL explicit cases MUST come first to preserve type safety contracts [Redux]
+      .addCase(fetchShelvesByCity.fulfilled, (state, action: PayloadAction<Shelf[]>) => {
+        state.isLoading = false;
+        state.shelves = action.payload;
+      })
+      .addCase(fetchAllAmenities.fulfilled, (state, action: PayloadAction<Amenity[]>) => {
+        state.isLoading = false;
+        state.amenities = action.payload;
+      })
+      .addCase(searchHotelInventory.fulfilled, (state, action: PayloadAction<{ hotels: HotelCardData[]; nextCursor: string | null }>) => {
+        state.isLoading = false;
+        state.searchResults = action.payload.hotels;
+        state.nextCursor = action.payload.nextCursor;
+      })
+      
+      // 2. ALL generalized matchers MUST be attached strictly at the end [Redux]
+      .addMatcher(
+        (action) => action.type.endsWith('/pending'),
+        (state) => {
+          state.isLoading = true;
+          state.error = null;
+        }
+      )
+      .addMatcher(
+        (action) => action.type.endsWith('/rejected'),
+        (state, action: any) => {
+          state.isLoading = false;
+          state.error = action.error?.message || 'An unexpected operational breakdown occurred';
+        }
+      );
+  },
 
-           .addMatcher(
-                (action) =>  action.type.startsWith('hotel/') && action.type.endsWith('/rejected'),
-                (state, action: any) => {
-                    state.isLoading = false;
-                    state.error = action.error.message || 'An unexpected error occured while processing request';
-                }
-           )
-
-           .addCase(fetchShelvesByCity.fulfilled, (state, action: PayloadAction<Shelf[]>) => {
-               state.isLoading = false;
-               state.shelves = action.payload;
-           })
-
-           .addCase(fetchAllAmenities.fulfilled, (state, action: PayloadAction<Amenity[]>) => {
-               state.isLoading = false;
-               state.amenities = action.payload;
-           })
-
-           .addCase(searchHotelInventory.fulfilled, (state, action: PayloadAction<{ hotels: HotelCardData[]; nextCursor: string | null }>) => {
-               state.isLoading = false;
-               state.searchResults = action.payload.hotels;
-               state.nextCursor = action.payload.nextCursor;
-           });
-    },
 });
 
 export const { clearSearchResults } = hotelSlice.actions;
