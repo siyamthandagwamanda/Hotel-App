@@ -118,10 +118,10 @@ const hotelSlice = createSlice({
         }
     },
 
-      // Make sure your state slice extraReducers block matches this exact order:
+     
   extraReducers: (builder) => {
     builder
-      // 1. ALL explicit cases MUST come first to preserve type safety contracts [Redux]
+
       .addCase(fetchShelvesByCity.fulfilled, (state, action: PayloadAction<Shelf[]>) => {
         state.isLoading = false;
         state.shelves = action.payload;
@@ -136,7 +136,6 @@ const hotelSlice = createSlice({
         state.nextCursor = action.payload.nextCursor;
       })
       
-      // 2. ALL generalized matchers MUST be attached strictly at the end [Redux]
       .addMatcher(
         (action) => action.type.endsWith('/pending'),
         (state) => {
