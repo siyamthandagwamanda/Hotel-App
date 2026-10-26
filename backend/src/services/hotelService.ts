@@ -1,5 +1,33 @@
 import { pool } from '../config/pool';
 
+
+export interface HotelRow {
+  id: string | number;
+  name: string;
+  city: string;
+  province: string;
+  star_rating: string | number;
+  rating_avg: string | number;
+  review_count: string | number;
+  setting: string;
+  from_price_cents: string | number;
+  images: any;
+}
+
+
+export const mapRow = (row: HotelRow): HotelCardData => ({
+  id: Number(row.id),
+  name: row.name,
+  city: row.city,
+  province: row.province,
+  starRating: Number(row.star_rating),
+  ratingAvg: Number(row.rating_avg),
+  reviewCount: Number(row.review_count),
+  setting: row.setting,
+  fromPriceCents: Number(row.from_price_cents),
+  images: row.images
+});
+
 export interface HotelCardData {
   id: number;
   name: string;

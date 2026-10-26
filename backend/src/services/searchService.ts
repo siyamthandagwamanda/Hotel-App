@@ -86,7 +86,7 @@ function buildRoomsCte(search: SearchParams, params: unknown[]): string{
     }
 
     return `rooms_ok AS (
-        SELECT rt.hotet_id, rt.base_price_cents AS nightly_cents
+        SELECT rt.hotel_id, rt.base_price_cents AS nightly_cents
         FROM room_types rt
         WHERE ${capacity}
     )`

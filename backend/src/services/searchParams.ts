@@ -45,7 +45,7 @@ function readDate(value: unknown, name: string): string | null {
 
     const parsed = new Date(`${text}T00:00:00Z`);
    
-    const looksRight = /^\d{4}-\d{2}-\d{2}\$/.test(text);
+    const looksRight = /^\d{4}-\d{2}-\d{2}$/.test(text);
 
     if (!looksRight || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== text){
         throw fail(`${name} must be a real date written as YYYY-MM-DD`)
