@@ -1,45 +1,64 @@
-import LandingPage from "./LandingPage";
-import HomePage from "./HomePage";
-import { useAppDispatch, useAppSelector } from "../hooks/storeHooks";
-import {setLandingScreen} from "./../slices/journeySlice";
-import './../styles/EntryPage.module.css';
+import { useAppDispatch, useAppSelector } from '../../src/hooks/storeHooks';
+import { HomeDeckPage } from '../../src/pages/HomePage';
+import { LandingPage } from '../../src/pages/LandingPage';
+import { setLandingScreen } from '../../src/slices/journeySlice';
 
-export function EntryPage(){
-    const dispatch = useAppDispatch();
+export function EntryPage() {
+  const dispatch = useAppDispatch();
 
-    const { landingScreen } = useAppSelector((state) => state.journey);
 
-    const handleEnter = () => {
-        dispatch(setLandingScreen(true));
-    };
+  const { landingScreen } = useAppSelector((state) => state.journey);
 
-    const handleBackToLanding = () => {
-        dispatch(setLandingScreen(false));
-    };
+  const handleEnterCatalog = () => {
+    dispatch(setLandingScreen(false));
+  };
 
-    return(
-        <div className="entry">
-{/* Sliding Track Viewport: Animates sideways depending on store state */}
-        <div className={`entry-track ${landingScreen ? 'entry-track-home' : ''}`}>
+  const handleReturnToLanding = () => {
+    dispatch(setLandingScreen(true));
+  };
 
-        <div
-            className={`entry-panel ${landingScreen ? 'entry-panel-hidden' : ''}`}
-            aria-hidden={landingScreen}
+  return (
+    <div 
+      className="entry-viewport-container" 
+      style={{
+        width: '100%',
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
+      {/* 
+        THE MASTER CAROUSEL TRACK CANVAS
+        Translates exactly -50% to move the panels sideways based on Redux
+      */}
+      <div
+        className="entry-carousel-track"
+        style={{
+          display: 'flex',
+          width: '200%',
+          transform: landingScreen ? 'translateX(0%)' : 'translateX(-50%)',
+          transition: 'transform 400ms cubic-bezier(0.25, 1, 0.5, 1)'
+        }}
+      >
+        {/* PANEL 1 (Left Column Frame): Broad Destination Setup Cards Form Container */}
+        <div 
+          className="entry-panel-pane" 
+          aria-hidden={!landingScreen}
+          style={{ width: '50%', height: '100%' }}
         >
-            <LandingPage onEnter={handleEnter}/>
+          <LandingPage onEnter={handleEnterCatalog} />
         </div>
 
-        <div
-            className={`entry-panel ${!landingScreen ? 'entry-panel-hidden' : ''}`}
-            aria-hidden={!landingScreen}
+        {/* PANEL 2 (Right Column Frame): Deep Sub-Category Discovery Shelves Catalogue */}
+        <div 
+          className="entry-panel-pane" 
+          aria-hidden={landingScreen}
+          style={{ width: '50%', height: '100%' }}
         >
-            <HomePage  onBackToLanding={handleBackToLanding}/>
+          <HomeDeckPage onBackToLanding={handleReturnToLanding} />
         </div>
-
-        </div>
-        </div>
-
-    )
+      </div>
+    </div>
+  );
 }
 
-export default EntryPage
+export default EntryPage;
