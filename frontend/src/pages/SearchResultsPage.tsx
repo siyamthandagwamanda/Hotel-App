@@ -1,107 +1,143 @@
 import { useState } from 'react';
+import type { ChangeEvent } from 'react';
 import Logo from '../components/shared/Logo.js';
+import ResultsList from './../components/shared/ResultsList';
+import type { ResultsArgs } from './../components/shared/ResultsList';
+import SearchSheet from './../components/shared/SearchSheet';
+import FilterSheet from './../components/shared/FilterSheet';
+import { setSort } from './../slices/searchSlice';
+import { describeSearch } from './../utils/describeSearch';
+import { countActiveFilters } from './../utils/countFilter';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { setCurrentPage } from '../slices/journeySlice.js';
+//import './SearchResultsPage.css';
 
+export type SortOrder = 'recommended' | 'price_asc' | 'price_desc' | 'rating';
 
-interface HotelImage {
-  url: string;
-  alt: string;
+interface SortOption {
+  value: SortOrder;
+  label: string;
 }
 
-interface HotelCardData {
-  id: number;
-  name: string;
-  city: string;
-  province: string;
-  starRating: number;
-  ratingAvg: number;
-  reviewCount: number;
-  setting: string;
-  fromPriceCents: number;
-  images: HotelImage[];
-}
+const sortOptions: SortOption[] = [
+  { value: 'recommended', label: 'Recommended' },
+  { value: 'price_asc', label: 'Price: low to high' },
+  { value: 'price_desc', label: 'Price: high to low' },
+  { value: 'rating', label: 'Star rating' },
+];
+
+type OpenSheet = 'none' | 'search' | 'filters';
 
 export function SearchResultsPage() {
   const dispatch = useAppDispatch();
+  const search = useAppSelector((state) => state.search);
 
-
-  const { city, checkIn, checkOut, guests } = useAppSelector((state) => state.search);
-  
-
-  const { searchResults, isLoading, error } = useAppSelector((state) => state.hotels);
-  
+  const [sheet, setSheet] = useState<OpenSheet>('none');
   const [openedId, setOpenedId] = useState<number | null>(null);
 
-  const searchSummaryText = `${city || 'All Destinations'} · ${
-    checkIn && checkOut ? `${checkIn} to ${checkOut}` : 'Flexible Dates'
-  } · ${guests.adults} ${guests.adults === 1 ? 'guest' : 'guests'}`;
+ 
+  const args: ResultsArgs = {
+    city: search.city,
+    checkIn: search.checkIn,
+    checkOut: search.checkOut,
+    adults: search.guests.adults,
+    children: search.guests.children,
+    rooms: search.guests.rooms,
+    minPrice: search.filters.minPrice,
+    maxPrice: search.filters.maxPrice,
+    stars: search.filters.stars,
+    amenityIds: search.filters.amenityIds,
+    propertyType: search.filters.propertyType,
+    sort: search.sort,
+  };
+  
+  const argsKey = JSON.stringify(args);
+  const filterCount = countActiveFilters(search.filters);
+
+  const handleSortChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const found = sortOptions.find((option) => option.value === event.target.value);
+    if (found !== undefined) {
+      dispatch(setSort(found.value));
+    }
+  };
 
   return (
     <div className="results-page">
-   
+      
       <header className="results-header">
-        <button 
-          type="button" 
-          className="results-back-btn" 
+        <button
+          type="button"
+          className="results-home"
+          aria-label="Back to home"
           onClick={() => dispatch(setCurrentPage(0))}
         >
-          ← Back
-        </button>
-        <div className="results-summary-pill">
           <Logo colour="dark" />
-          <span className="results-pill-text">{searchSummaryText}</span>
-        </div>
+        </button>
+        
+        {/* Interactive Search Summary Pill: Tapping slides open the edit sheet drawer */}
+        <button
+          type="button"
+          className="results-pill"
+          onClick={() => setSheet('search')}
+        >
+          {describeSearch(
+            search.city,
+            search.checkIn,
+            search.checkOut,
+            search.guests.adults,
+          )}
+        </button>
       </header>
 
- 
-      <main className="results-main">
-        <h1 className="results-title">Available Accommodations</h1>
+      {/* filter drawers and sorting selector fields */}
+      <div className="results-toolbar">
+        <button
+          type="button"
+          className="results-filter-button"
+          onClick={() => setSheet('filters')}
+        >
+          Filters
+          {filterCount > 0 && <span className="results-badge">{filterCount}</span>}
+        </button>
 
-  
-        {isLoading && <p className="results-message">Searching for optimal stays...</p>}
-        {error && <p className="results-message results-message-error">Could not fetch properties: {error}</p>}
-        
-        {!isLoading && !error && (!searchResults || searchResults.length === 0) && (
-          <p className="results-message">No matching stays found. Try widening your criteria bounds.</p>
-        )}
-
-        {openedId !== null && (
-          <p className="results-message results-message-alert">
-            Selected property ID: {openedId}. The details sheet arrives in the next milestone module.
-          </p>
-        )}
-
-        {!isLoading && !error && searchResults && searchResults.length > 0 && (
-          <div className="results-grid">
-            {searchResults.map((hotel: HotelCardData) => (
-              <article 
-                key={hotel.id} 
-                className="results-card"
-                onClick={() => setOpenedId(hotel.id)}
-              >
-                {hotel.images && hotel.images.length > 0 && (
-                  <img 
-                    className="results-card-img" 
-                    src={hotel.images[0].url} 
-                    alt={hotel.images[0].alt || hotel.name} 
-                  />
-                )}
-                <div className="results-card-body">
-                  <h2 className="results-card-name">{hotel.name}</h2>
-                  <p className="results-card-meta">📍 {hotel.city}, {hotel.province} · ⭐ {hotel.ratingAvg.toFixed(1)}</p>
-                  <div className="results-card-footer">
-                    <span className="results-card-setting">{hotel.setting}</span>
-                    <span className="results-card-price">
-                      R{(hotel.fromPriceCents / 100).toLocaleString('en-ZA')} <small>/ night</small>
-                    </span>
-                  </div>
-                </div>
-              </article>
+        <label className="results-sort">
+          <span className="results-sort-label">Sort by</span>
+          <select
+            className="field-input"
+            value={search.sort}
+            onChange={handleSortChange}
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
             ))}
-          </div>
-        )}
-      </main>
+          </select>
+        </label>
+      </div>
+
+      {openedId !== null && (
+        <p className="results-note">
+          Hotel {openedId} selected. The detail page comes in a later step.
+        </p>
+      )}
+
+      {/*Keyset Pagination*/}
+      <ResultsList key={argsKey} args={args} onOpenHotel={setOpenedId} />
+
+      {/*Overlay Drawer*/}
+      {sheet === 'search' && (
+        <SearchSheet
+          onClose={() => setSheet('none')}
+          onSubmit={() => setSheet('none')}
+        />
+      )}
+      
+      {sheet === 'filters' && (
+        <FilterSheet
+          onClose={() => setSheet('none')}
+        />
+      )}
     </div>
   );
 }
