@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import searchReducer from './slices/searchSlice';
 import journeyReducer from './slices/journeySlice'
 import hotelReducer from './slices/hotelSlices'
+import favouriteReducer from './slices/favouriteSlice'
 
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
         search: searchReducer,
         journey: journeyReducer,
         hotels: hotelReducer,
+        favourites: favouriteReducer
     },
 });
 
