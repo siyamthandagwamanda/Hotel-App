@@ -6,7 +6,7 @@ import { setLandingScreen } from '../../src/slices/journeySlice';
 export function EntryPage() {
   const dispatch = useAppDispatch();
 
-
+ 
   const { landingScreen } = useAppSelector((state) => state.journey);
 
   const handleEnterCatalog = () => {
@@ -26,10 +26,7 @@ export function EntryPage() {
         position: 'relative'
       }}
     >
-      {/* 
-        THE MASTER CAROUSEL TRACK CANVAS
-        Translates exactly -50% to move the panels sideways based on Redux
-      */}
+
       <div
         className="entry-carousel-track"
         style={{
@@ -39,7 +36,7 @@ export function EntryPage() {
           transition: 'transform 400ms cubic-bezier(0.25, 1, 0.5, 1)'
         }}
       >
-        {/* PANEL 1 (Left Column Frame): Broad Destination Setup Cards Form Container */}
+        {/* PANEL 1: Landing Form Panel View */}
         <div 
           className="entry-panel-pane" 
           aria-hidden={!landingScreen}
@@ -48,7 +45,7 @@ export function EntryPage() {
           <LandingPage onEnter={handleEnterCatalog} />
         </div>
 
-        {/* PANEL 2 (Right Column Frame): Deep Sub-Category Discovery Shelves Catalogue */}
+        {/* PANEL 2: Home Catalog Discovery Shelves Deck View */}
         <div 
           className="entry-panel-pane" 
           aria-hidden={landingScreen}

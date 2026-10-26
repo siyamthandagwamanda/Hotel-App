@@ -3,7 +3,7 @@ import BottomSheet from '../../components/shared/BottomSheet';
 import Chip from '../../components/shared/Chip';
 import { useAppDispatch, useAppSelector } from '../../hooks/storeHooks';
 import { clearFilters, setFilters } from './../../slices/searchSlice';
-import './FilterSheet.css';
+// import './FilterSheet.css';
 
 interface FilterSheetProps {
   onClose: () => void;
