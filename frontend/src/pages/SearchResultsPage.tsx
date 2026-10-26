@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Logo from '../components/shared/Logo.js';
-import { useAppDispatch, useAppSelector } from './../hooks/storeHooks';
+import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { setCurrentPage } from '../slices/journeySlice.js';
 
 
@@ -25,7 +25,7 @@ interface HotelCardData {
 export function SearchResultsPage() {
   const dispatch = useAppDispatch();
 
-  
+
   const { city, checkIn, checkOut, guests } = useAppSelector((state) => state.search);
   
 
@@ -39,7 +39,7 @@ export function SearchResultsPage() {
 
   return (
     <div className="results-page">
-    
+   
       <header className="results-header">
         <button 
           type="button" 
@@ -54,11 +54,11 @@ export function SearchResultsPage() {
         </div>
       </header>
 
-     
+ 
       <main className="results-main">
         <h1 className="results-title">Available Accommodations</h1>
 
-     
+  
         {isLoading && <p className="results-message">Searching for optimal stays...</p>}
         {error && <p className="results-message results-message-error">Could not fetch properties: {error}</p>}
         
@@ -72,7 +72,6 @@ export function SearchResultsPage() {
           </p>
         )}
 
-     
         {!isLoading && !error && searchResults && searchResults.length > 0 && (
           <div className="results-grid">
             {searchResults.map((hotel: HotelCardData) => (
