@@ -1,6 +1,5 @@
 import { pool } from '../config/pool';
 
-
 export interface HotelRow {
   id: string | number;
   name: string;
@@ -11,22 +10,8 @@ export interface HotelRow {
   review_count: string | number;
   setting: string;
   from_price_cents: string | number;
-  images: any;
+  images: { url: string; alt: string }[];
 }
-
-
-export const mapRow = (row: HotelRow): HotelCardData => ({
-  id: Number(row.id),
-  name: row.name,
-  city: row.city,
-  province: row.province,
-  starRating: Number(row.star_rating),
-  ratingAvg: Number(row.rating_avg),
-  reviewCount: Number(row.review_count),
-  setting: row.setting,
-  fromPriceCents: Number(row.from_price_cents),
-  images: row.images
-});
 
 export interface HotelCardData {
   id: number;
@@ -47,7 +32,7 @@ export interface Shelf {
   hotels: HotelCardData[];
 }
 
-interface ShelfDefinition {
+export interface ShelfDefinition {
   id: string;
   title: string;
   where: string;
@@ -59,7 +44,20 @@ interface ShelfDefinition {
 export type Amenity = {
   id: number;
   name: string;
-}
+};
+
+export const mapRow = (row: HotelRow): HotelCardData => ({
+  id: Number(row.id),
+  name: row.name,
+  city: row.city,
+  province: row.province,
+  starRating: Number(row.star_rating),
+  ratingAvg: Number(row.rating_avg),
+  reviewCount: Number(row.review_count),
+  setting: row.setting,
+  fromPriceCents: Number(row.from_price_cents),
+  images: row.images,
+});
 
 const petFriendlyClause = `EXISTS (
   SELECT 1 FROM hotel_amenities ha
@@ -68,8 +66,7 @@ const petFriendlyClause = `EXISTS (
 )`;
 
 const shelfDefinitions: ShelfDefinition[] = [
-  
-  { id: 'near-you', title: 'Near you', where: 'h.province = \$1', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: true },
+  { id: 'near-you', title: 'Near you', where: 'h.province = $1', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: true },
   { id: 'top-rated', title: 'Top rated', where: '', having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
   { id: 'best-value', title: 'Best value', where: '', having: 'TRUE', orderBy: 'MIN(rt.base_price_cents) ASC', useCity: false },
   { id: 'beach', title: 'Beach escapes', where: "h.setting = 'beach'", having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
@@ -79,26 +76,32 @@ const shelfDefinitions: ShelfDefinition[] = [
   { id: 'pet-friendly', title: 'Pet friendly', where: petFriendlyClause, having: 'TRUE', orderBy: 'h.rating_avg DESC', useCity: false },
 ];
 
+// Finds the province of the searched city, preferring an exact city match.
 export async function findProvince(city: string): Promise<string | null> {
   const escaped = city.replace(/[\\%_]/g, '\\$&');
   const result = await pool.query(
-    'SELECT province FROM hotels WHERE city ILIKE \$1 OR province ILIKE \$1 LIMIT 1',
-    [`%${escaped}%`],
+    `SELECT province FROM hotels
+     WHERE city ILIKE $1 OR province ILIKE $1
+     ORDER BY (LOWER(city) = LOWER($2)) DESC, rating_avg DESC
+     LIMIT 1`,
+    [`%${escaped}%`, city],
   );
   return result.rows[0]?.province ?? null;
 }
 
-
-export async function fetchShelfHotels(shelf: ShelfDefinition, province: string | null): Promise<HotelCardData[]> {
+export async function fetchShelfHotels(
+  shelf: ShelfDefinition,
+  province: string | null,
+): Promise<HotelCardData[]> {
   let whereText = "h.status = 'published'";
   const params: string[] = [];
 
   if (shelf.useCity) {
-   
     if (!province) return [];
     params.push(province);
-    whereText = `${whereText} AND ${shelf.where}`;
-  } else if (shelf.where !== '') {
+  }
+
+  if (shelf.where !== '') {
     whereText = `${whereText} AND ${shelf.where}`;
   }
 
@@ -123,24 +126,11 @@ export async function fetchShelfHotels(shelf: ShelfDefinition, province: string 
     ORDER BY ${shelf.orderBy}
     LIMIT 10`;
 
-  const result = await pool.query(sql, params);
-
-  return result.rows.map((row) => ({
-    id: Number(row.id),
-    name: row.name,
-    city: row.city,
-    province: row.province,
-    starRating: Number(row.star_rating),
-    ratingAvg: Number(row.rating_avg),
-    reviewCount: Number(row.review_count),
-    setting: row.setting,
-    fromPriceCents: Number(row.from_price_cents),
-    images: row.images,
-  }));
+  const result = await pool.query<HotelRow>(sql, params);
+  return result.rows.map(mapRow);
 }
 
 export async function getShelves(city: string): Promise<Shelf[]> {
-
   const province = city ? await findProvince(city) : null;
 
   const results = await Promise.all(
@@ -164,7 +154,7 @@ export async function getShelves(city: string): Promise<Shelf[]> {
     .map((r) => ({ id: r.definition.id, title: r.definition.title, hotels: r.hotels }));
 }
 
-export async function getAmenities(): Promise<Amenity[]>{
+export async function getAmenities(): Promise<Amenity[]> {
   const result = await pool.query('SELECT id, name FROM amenities ORDER BY name');
 
   return result.rows.map((row) => ({
