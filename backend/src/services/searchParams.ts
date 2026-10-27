@@ -1,9 +1,8 @@
-import { registry } from "zod/v4";
 import { HttpError } from "../middleware/errorHandler";
 import type { SearchParams, SearchCursor, SortOrder } from "./searchService";
 
 const SortOrders: SortOrder[] = ['recommended', 'price_asc', 'price_desc', 'rating'];
-const settings: string[] = ['beach', 'city', 'safari', 'mountain', 'countryside'];
+const settings: string[] = ['beach', 'city', 'safari', 'mountain', 'countryside', 'suburban-hills'];
 
 const MAX_NIGHTS = 30;
 const MAX_PRICE_RAND = 1000000;
@@ -98,7 +97,7 @@ function readCursor(value: unknown): SearchCursor | null {
         const decoded = JSON.parse(Buffer.from(text, 'base64url').toString('utf-8'));
 
         
-        const valueOk = typeof decoded.v === 'string' && /^-?\d+(\.\d+)?\$/.test(decoded.v);
+        const valueOk = typeof decoded.v === 'string' && /^-?\d+(\.\d+)?$/.test(decoded.v);
 
         const idOk = Number.isInteger(decoded.id) && decoded.id > 0;
 
