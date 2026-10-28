@@ -1,12 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
-//import './index.css'
 import App from './App.tsx'
 import { store } from './store.ts'
-// import './styles/tokens.css'
-// import './styles/global.css'
-// import '/styles/forms.css'
+import './styles/tokens.css'
+import './styles/global.css'
+import '/styles/forms.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
