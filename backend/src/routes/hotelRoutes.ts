@@ -28,4 +28,6 @@ router.get('/amenities', async (req , res) => {
   res.json({amenities});
 });
 
+
+
 export default router;
