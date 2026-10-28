@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { getAmenities, getShelves } from '../services/hotelService';
 import { searchHotels } from '../services/searchService';
 import { parseSearchQuery } from '../services/searchParams';
+import { HttpError } from '../middleware/errorHandler';
+import { getHotelReviews, getNextStayRooms, getNextStayDetail } from '../services/nextStayDetailService';
 
 const router = Router();
 
@@ -25,5 +27,7 @@ router.get('/amenities', async (req , res) => {
   const amenities = await getAmenities();
   res.json({amenities});
 });
+
+
 
 export default router;
