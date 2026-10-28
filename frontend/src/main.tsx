@@ -5,11 +5,7 @@ import App from './App.tsx'
 import { store } from './store.ts'
 import './styles/tokens.css'
 import './styles/global.css'
-<<<<<<< HEAD
-import '/styles/forms.css'
-=======
 import './styles/forms.css'
->>>>>>> root/main
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
