@@ -1,10 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import { env } from './config/env.js';
-import statusRouter from './routes/status.js';
-import hotelRouter from './routes/hotelRoutes.js';
-import { runMigrations } from './services/tableService.js';
-import { seedDatabase } from './services/seedService.js';
+import { env } from './config/env';
+import statusRouter from './routes/status';
+import hotelRouter from './routes/hotelRoutes';
+import { runMigrations } from './services/tableService';
+import { seedDatabase } from './services/seedService';
+import { notFound, errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
@@ -15,6 +16,10 @@ app.use(express.json());
 app.use('/api', statusRouter);
 
 app.use('/api/hotels', hotelRouter);
+
+app.use(notFound);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
