@@ -137,14 +137,14 @@ const hotelSlice = createSlice({
       })
       
       .addMatcher(
-        (action) => action.type.endsWith('/pending'),
+        (action) => action.type.startsWith('hotel/') && action.type.endsWith('/pending'),
         (state) => {
           state.isLoading = true;
           state.error = null;
         }
       )
       .addMatcher(
-        (action) => action.type.endsWith('/rejected'),
+        (action) => action.type.startsWith('hotel/') && action.type.endsWith('/rejected'),
         (state, action: any) => {
           state.isLoading = false;
           state.error = action.error?.message || 'An unexpected operational breakdown occurred';
