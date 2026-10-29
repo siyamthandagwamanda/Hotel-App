@@ -36,7 +36,7 @@ export function Gallery({ images }: GalleryProps) {
 
   function handleTouchEnd(event: TouchEvent<HTMLDivElement>) {
     const deltaX = event.changedTouches[0].clientX - touchStartX.current;
-    if (deltaX < -SWIPE_DISTANCE) {
+    if (deltaX < - SWIPE_DISTANCE) {
       showNext();
     } else if (deltaX > SWIPE_DISTANCE) {
       showPrevious();
