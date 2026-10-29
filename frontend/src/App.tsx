@@ -1,16 +1,16 @@
-import { EntryPage } from './pages/EntryPage.js';
-import { SearchResultsPage } from './pages/SearchResultsPage.js';
-import { useAppSelector } from './hooks/storeHooks'
+import { Route, Routes } from "react-router-dom";
+import { EntryPage } from './pages/EntryPage';
+import { SearchResultsPage } from './pages/SearchResultsPage'
+//import { HotelDetailPage } from './pages/HotelDetailPage'
 
-export function App() {
-  // 1. Single State Lookup (Our Single Source of Truth)
-  const { currentPage } = useAppSelector((state) => state.journey);
-
-  // 2. Pure Functional Component Lookup Map (Saves memory, zero crashes)
-  const ActivePage = currentPage === 1 ? SearchResultsPage : EntryPage;
-
-  // 3. Flat Single Return Tag
-  return <ActivePage />;
+export function App(){
+  return(
+    <Routes>
+      <Route path="/" element={ <EntryPage /> }/>
+      <Route path="/search" element={ <SearchResultsPage /> }/>
+      {/*<Route path="/hotels/:id" element={ <HotelDetailPage/> } */}
+    </Routes>
+  )
 }
 
 export default App;
