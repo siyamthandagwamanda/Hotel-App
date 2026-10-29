@@ -1,25 +1,19 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Logo from '../components/shared/Logo';
-import ChipBar from './../components/shared/ChipBar';
-import DeckPager from './../components/shared/HomePaper';
-import { buildDeckPages, deckChips } from './../utils/homePageUtils';
-import { setCurrentPage } from './../slices/journeySlice';
-import { useAppDispatch, useAppSelector } from './../hooks/storeHooks';
-import './../styles/HomePage.module.css';
-
-interface HomeDeckPageProps {
-  onBackToLanding: () => void;
-}
-
+import ChipBar from '../components/shared/ChipBar';
+import DeckPager from '../components/shared/HomePaper';
+import { buildDeckPages, deckChips } from '../utils/homePageUtils';
+import { setCurrentPage } from '../slices/journeySlice';
+import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
+//import '../styles/HomePage.css'; // renamed from HomePage.module.css
 
 function describeSearch(
   city: string,
   checkIn: string | null,
   checkOut: string | null,
   adults: number,
-
 ): string {
-
   const parts: string[] = [];
   parts.push(city === '' ? 'Where to?' : city);
 
@@ -30,10 +24,10 @@ function describeSearch(
   return parts.join(' · ');
 }
 
-export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
+export function HomeDeckPage() {
   const dispatch = useAppDispatch();
- 
-  
+  const navigate = useNavigate();
+
   const city = useAppSelector((state) => state.search.city);
   const checkIn = useAppSelector((state) => state.search.checkIn);
   const checkOut = useAppSelector((state) => state.search.checkOut);
@@ -43,27 +37,23 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
   const { shelves, isLoading, error } = useAppSelector((state) => state.hotels);
 
   const [clickedChipId, setClickedChipId] = useState<string | null>(null);
-  const [openedId, setOpenedId] = useState<number | null>(null);
 
-  // Group raw database shelves into sub-page decks purely in-memory
   const pages = shelves ? buildDeckPages(shelves) : [];
   const safePage = pages.length === 0 ? 0 : Math.min(Math.max(currentPage, 0), pages.length - 1);
   const activePage = pages.length > 0 ? pages[safePage] : null;
 
-  // Filter chips to display only the choices available in the current data payload
-  const visibleChips = deckChips.filter((chip) => 
-    pages.some((page) => page.id === chip.pageId)
+  const visibleChips = deckChips.filter((chip) =>
+    pages.some((page) => page.id === chip.pageId),
   );
 
-  
   const findActiveChipId = (): string => {
     if (!activePage) return '';
-    
+
     const clicked = visibleChips.find((chip) => chip.id === clickedChipId);
     if (clicked && clicked.pageId === activePage.id) {
       return clicked.id;
     }
-    
+
     const first = visibleChips.find((chip) => chip.pageId === activePage.id);
     return first ? first.id : '';
   };
@@ -82,13 +72,12 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
   return (
     <div className="deck">
       <header className="deck-header">
-        <button type="button" className="deck-home" onClick={onBackToLanding}>
+        <button type="button" className="deck-home" onClick={() => navigate('/')}>
           <Logo colour="dark" />
         </button>
         <p className="deck-pill">{describeSearch(city, checkIn, checkOut, adults)}</p>
       </header>
 
-     
       {visibleChips.length > 0 && (
         <ChipBar
           chips={visibleChips}
@@ -97,24 +86,19 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
         />
       )}
 
-     
       {isLoading && <p className="deck-message">Loading shelves...</p>}
       {error && <p className="deck-message">Could not load shelves: {error}</p>}
-      
+
       {!isLoading && !error && pages.length === 0 && (
         <p className="deck-message">No hotels found. Try another city.</p>
       )}
-      
-      {openedId !== null && (
-        <p className="deck-message deck-message-highlight">
-          Hotel {openedId} selected. The detail page comes in a later step.
-        </p>
-      )}
 
-      
       {pages.length > 0 && (
         <div className="deck-body">
-          <DeckPager pages={pages} onOpenHotel={setOpenedId} />
+          <DeckPager
+            pages={pages}
+            onOpenHotel={(hotelId) => navigate('/hotels/' + hotelId)}
+          />
         </div>
       )}
     </div>

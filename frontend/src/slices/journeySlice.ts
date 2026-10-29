@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 
 interface JourneyState {
   landingScreen: boolean;
+//the Home Page swipe page only. Screens are chosen by the URL.
   currentPage: number;
   rowScrollPositions: Record<string, number>;
 }
