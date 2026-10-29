@@ -9,7 +9,7 @@ import { setSort } from './../slices/searchSlice';
 import { describeSearch } from './../utils/describeSearch';
 import { countActiveFilters } from './../utils/countFilter';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
-import { setCurrentPage } from '../slices/journeySlice.js';
+import { useNavigate } from 'react-router-dom';
 //import './SearchResultsPage.css';
 
 export type SortOrder = 'recommended' | 'price_asc' | 'price_desc' | 'rating';
@@ -30,10 +30,11 @@ type OpenSheet = 'none' | 'search' | 'filters';
 
 export function SearchResultsPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const search = useAppSelector((state) => state.search);
 
   const [sheet, setSheet] = useState<OpenSheet>('none');
-  const [openedId, setOpenedId] = useState<number | null>(null);
+ 
 
  
   const args: ResultsArgs = {
@@ -69,7 +70,7 @@ export function SearchResultsPage() {
           type="button"
           className="results-home"
           aria-label="Back to home"
-          onClick={() => dispatch(setCurrentPage(0))}
+          onClick={() => navigate('/')}
         >
           <Logo colour="dark" />
         </button>
@@ -116,14 +117,8 @@ export function SearchResultsPage() {
         </label>
       </div>
 
-      {openedId !== null && (
-        <p className="results-note">
-          Hotel {openedId} selected. The detail page comes in a later step.
-        </p>
-      )}
-
       {/*Keyset Pagination*/}
-      <ResultsList key={argsKey} args={args} onOpenHotel={setOpenedId} />
+      <ResultsList key={argsKey} args={args} onOpenHotel={(hotelId) => navigate('/hotels/' + hotelId)} />
 
       {/*Overlay Drawer*/}
       {sheet === 'search' && (
