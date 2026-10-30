@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/shared/Logo';
 import ChipBar from '../components/shared/ChipBar';
@@ -8,6 +8,8 @@ import { buildDeckPages, deckChips } from '../utils/homePageUtils';
 import { describeSearch } from '../utils/describeSearch';
 import { setCurrentPage } from '../slices/journeySlice';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
+import { fetchShelvesByCity } from '../slices/hotelSlices';
+import selectShelfCity from '../hotel/searchSelector';
 //import '../styles/HomePage.css';
 
 interface HomeDeckPageProps {
@@ -22,6 +24,12 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
   const checkIn = useAppSelector((state) => state.search.checkIn);
   const checkOut = useAppSelector((state) => state.search.checkOut);
   const adults = useAppSelector((state) => state.search.guests.adults);
+
+  const shelfCity = useAppSelector(selectShelfCity);
+
+  useEffect(() => {
+    dispatch(fetchShelvesByCity(shelfCity));
+  }, [dispatch, shelfCity]);
 
   const { currentPage } = useAppSelector((state) => state.journey);
   const { shelves, isLoading, error } = useAppSelector((state) => state.hotels);
