@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 import { pool } from '../config/pool.js';
 
-type Setting = 'beach' | 'city' | 'safari' | 'mountain' | 'countryside' ;
+type Setting = 'beach' | 'city' | 'safari' | 'mountain' | 'countryside';
 
 type SeedRoom = {
   name: string;
@@ -28,6 +28,44 @@ type SeedHotel = {
   reviewCount: number;
   amenities: string[];
   rooms: SeedRoom[];
+};
+
+function unsplash(photoId: string): string {
+  return 'https://images.unsplash.com/' + photoId + '?auto=format&fit=crop&w=1200&q=80';
+}
+
+
+const imagePools: Record<Setting, string[]> = {
+  beach: [
+    unsplash('photo-1520250497591-112f2f40a3f4'),
+    unsplash('photo-1566073771259-6a8506099945'),
+    unsplash('photo-1571896349842-33c89424de2d'),
+    unsplash('photo-1582719478250-c89cae4dc85b'),
+  ],
+  city: [
+    unsplash('photo-1542314831-068cd1dbfeeb'),
+    unsplash('photo-1551882547-ff40c63fe5fa'),
+    unsplash('photo-1564501049412-61c2a3083791'),
+    unsplash('photo-1578683010236-d716f9a3f461'),
+  ],
+  safari: [
+    unsplash('photo-1516426122078-c23e76319801'),
+    unsplash('photo-1523805009345-7448845a9e53'),
+    unsplash('photo-1566073771259-6a8506099945'),
+    unsplash('photo-1618773928121-c32242e63f39'),
+  ],
+  mountain: [
+    unsplash('photo-1464822759023-fed622ff2c3b'),
+    unsplash('photo-1445019980597-93fa8acb246c'),
+    unsplash('photo-1582719478250-c89cae4dc85b'),
+    unsplash('photo-1578683010236-d716f9a3f461'),
+  ],
+  countryside: [
+    unsplash('photo-1445019980597-93fa8acb246c'),
+    unsplash('photo-1564501049412-61c2a3083791'),
+    unsplash('photo-1618773928121-c32242e63f39'),
+    unsplash('photo-1578683010236-d716f9a3f461'),
+  ],
 };
 
 const amenityNames: string[] = [
@@ -67,7 +105,7 @@ function twoRooms(standardRand: number, bedType: string): SeedRoom[] {
 
 const hotels: SeedHotel[] = [
   {
-    slug: 'sea-breeze', name: 'Sea Breeze Hotel',
+    slug: 'sea-breeze', name: 'Manzini-Resort',
     description: 'Wake to Indian Ocean views at this easygoing coastal hideaway, with a saltwater pool and the promenade within reach.',
     city: 'Durban', province: 'KwaZulu-Natal', address: '12 Lighthouse Road, Umhlanga',
     latitude: -29.7268, longitude: 31.0856, starRating: 4.5, setting: 'beach',
@@ -94,7 +132,7 @@ const hotels: SeedHotel[] = [
   },
 
   {
-    slug: 'dune-lodge', name: 'Dune Lodge',
+    slug: 'abathwa-lodge', name: 'Abathwa Lodge',
     description: 'Boutique lodge between the dunes and the sea in Ballito, with a spa and sunset terrace.',
     city: 'Ballito', province: 'KwaZulu-Natal', address: '5 Dune Crescent, Ballito',
     latitude: -29.539, longitude: 31.214, starRating: 4, setting: 'beach',
@@ -184,7 +222,7 @@ const hotels: SeedHotel[] = [
   },
 
   {
-    slug: 'karoo-stars', name: 'Karoo Stars Lodge',
+    slug: 'zanokuhle-stars', name: 'Zanokuhle Stars Lodge',
     description: 'Quiet pet friendly lodge under the Karoo sky, famous for stargazing and slow mornings.',
     city: 'Prince Albert', province: 'Western Cape', address: '9 Church Street, Prince Albert',
     latitude: -33.2247, longitude: 22.0296, starRating: 3.5, setting: 'countryside',
@@ -194,7 +232,7 @@ const hotels: SeedHotel[] = [
   },
 
   {
-    slug: 'midlands-mist', name: 'Midlands Mist Cottages',
+    slug: 'manelisi-mist', name: 'Manelisi Mist Cottages',
     description: 'Cosy pet friendly cottages on the Midlands Meander, with fireplaces and misty morning walks.',
     city: 'Howick', province: 'KwaZulu-Natal', address: 'Old Main Road, Howick',
     latitude: -29.4783, longitude: 30.2339, starRating: 4, setting: 'countryside',
@@ -204,18 +242,18 @@ const hotels: SeedHotel[] = [
   },
 
   {
-    slug: 'elephant-ridge', name: 'Elephant Ridge Lodge',
+    slug: 'nzuzwenhle-ridge', name: 'Nzuzwenhle Ridge Lodge',
     description: 'Safari lodge overlooking a waterhole, with game drives and open-air dining.',
     city: 'Mtubatuba', province: 'KwaZulu-Natal', address: 'Reserve Road, Mtubatuba',
     latitude: -28.4167, longitude: 32.1833, starRating: 4, setting: 'safari',
     ratingAvg: 9.2, reviewCount: 54,
     amenities: ['Game drives', 'Pool', 'Breakfast', 'Braai area'],
     rooms: twoRooms(1950, 'King'),
-  }
+  },
 ];
 
 export async function seedDatabase(): Promise<void> {
-  const client = await pool.connect();
+  const client: PoolClient = await pool.connect();
   try {
     await client.query('BEGIN');
 
@@ -223,16 +261,15 @@ export async function seedDatabase(): Promise<void> {
     const amenityMap = new Map<string, number>();
     for (const name of amenityNames) {
       const res = await client.query(
-        'INSERT INTO amenities (name) VALUES (\$1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id',
+        'INSERT INTO amenities (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id',
         [name],
       );
       amenityMap.set(name, Number(res.rows[0].id));
     }
 
-    
     for (const hotel of hotels) {
-  
-      const existing = await client.query('SELECT id FROM hotels WHERE name = \$1', [hotel.name]);
+      
+      const existing = await client.query('SELECT id FROM hotels WHERE name = $1', [hotel.name]);
       if (existing.rowCount && existing.rowCount > 0) continue;
 
       const hotelRes = await client.query(
@@ -249,26 +286,31 @@ export async function seedDatabase(): Promise<void> {
       );
       const hotelId = hotelRes.rows[0].id;
 
-     
       for (const amenityName of hotel.amenities) {
         const amenityId = amenityMap.get(amenityName);
         if (amenityId) {
           await client.query(
-            'INSERT INTO hotel_amenities (hotel_id, amenity_id) VALUES (\$1, \$2) ON CONFLICT DO NOTHING',
+            'INSERT INTO hotel_amenities (hotel_id, amenity_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
             [hotelId, amenityId],
           );
         }
       }
 
-     
       for (const policy of standardPolicies) {
         await client.query(
-          'INSERT INTO hotel_policies (hotel_id, type, text) VALUES (\$1, \$2, \$3)',
+          'INSERT INTO hotel_policies (hotel_id, type, text) VALUES ($1, $2, $3)',
           [hotelId, policy.type, policy.text],
         );
       }
 
-    
+      const photos = imagePools[hotel.setting];
+      for (let i = 0; i < photos.length; i++) {
+        await client.query(
+          'INSERT INTO hotel_images (hotel_id, url, alt_text, position) VALUES ($1, $2, $3, $4)',
+          [hotelId, photos[i], hotel.name + ' photo ' + (i + 1), i],
+        );
+      }
+
       for (const room of hotel.rooms) {
         const roomRes = await client.query(
           `INSERT INTO room_types
@@ -279,7 +321,7 @@ export async function seedDatabase(): Promise<void> {
            room.bedType, room.priceCents, room.units],
         );
 
-        
+        //night for the next 365 days
         await client.query(
           `INSERT INTO rooms_inventory (room_type_id, stay_date, units_available)
            SELECT $1, d::date, $2
@@ -291,17 +333,14 @@ export async function seedDatabase(): Promise<void> {
     }
 
     await client.query('COMMIT');
-    console.log(' Database seeded successfully.');
+    console.log('Database seeded successfully.');
 
   } catch (error) {
     await client.query('ROLLBACK');
-
     console.error('Seeding failed! Rolled back changes:', error);
     throw error;
-    
+
   } finally {
     client.release();
   }
 }
-
-

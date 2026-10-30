@@ -86,6 +86,14 @@ export async function createTables(client: PoolClient): Promise<void> {
       category TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS hotel_images (
+      id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      hotel_id BIGINT NOT NULL REFERENCES hotels(id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      alt_text TEXT,
+      position INTEGER NOT NULL DEFAULT 0
+    );
+
     CREATE TABLE IF NOT EXISTS hotel_amenities (
       hotel_id BIGINT NOT NULL REFERENCES hotels(id) ON DELETE CASCADE,
       amenity_id BIGINT NOT NULL REFERENCES amenities(id) ON DELETE CASCADE,
