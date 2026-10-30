@@ -58,7 +58,7 @@ export interface ReviewItem {
   name: string;
 }
 
-// Row shapes use "type" because the pg library does not accept interfaces here.
+
 type HotelDetailRow = {
   id: string;
   name: string;
@@ -100,7 +100,7 @@ type ReviewRow = {
 
 export async function apiTestingNextStayHotels(hotelId: number): Promise<void>{
     const result = await pool.query(
-        "SELECT 1 FROM hotels WHERE id = $1 AND status = 'published",
+        "SELECT 1 FROM hotels WHERE id = $1 AND status = 'published'",
         [hotelId]
     );
     if (result.rows.length === 0){
@@ -115,13 +115,13 @@ function countNights(checkIn: string, checkOut: string): number {
 }
 
 export async function getNextStayDetail(hotelId: number): Promise<NextStayDetail>{
-    const hotelResult = await pool.query<NextStayDetail>(
+    const hotelResult = await pool.query<HotelDetailRow>(
         `
             SELECT id, name, description, city, province, address, latitude, longitude,
                 star_rating, rating_avg, review_count, setting, check_in_time, check_out_time
             FROM hotels
             WHERE id = $1 AND status = 'published'`,
-            [hotelId]   
+        [hotelId]
     );
 
     if (hotelResult.rows.length === 0){
@@ -138,7 +138,7 @@ export async function getNextStayDetail(hotelId: number): Promise<NextStayDetail
     const amenityResult = await pool.query<{ id: string; name: string }>(
         `
         SELECT a.id, a.name
-        FROM hotel_amenities ha 
+        FROM hotel_amenities ha
         JOIN amenities a ON a.id = ha.amenity_id
         WHERE ha.hotel_id = $1
         ORDER BY a.name`,
@@ -150,24 +150,24 @@ export async function getNextStayDetail(hotelId: number): Promise<NextStayDetail
         [hotelId]
     );
 
-    return{
-    id: Number(row.id),
-    name: row.name,
-    description: row.description,
-    city: row.city,
-    province: row.province,
-    address: row.address,
-    latitude: Number(row.latitude),
-    longitude: Number(row.longitude),
-    starRating: Number(row.starRating),
-    ratingAvg: Number(row.ratingAvg),
-    reviewCount: row.reviewCount,
-    setting: row.setting,
-    checkInTime: row.checkOutTime.slice(0, 5),
-    checkOutTime: row.checkOutTime.slice(0, 5),
-    images: imageResult.rows.map((image) => ({ url: image.url, alt: image.alt_text })),
-    amenities: amenityResult.rows.map((amenity) => ({ id: Number(amenity.id), name: amenity.name })),
-    policies: policyResult.rows,
+    return {
+        id: Number(row.id),
+        name: row.name,
+        description: row.description,
+        city: row.city,
+        province: row.province,
+        address: row.address,
+        latitude: Number(row.latitude),
+        longitude: Number(row.longitude),
+        starRating: Number(row.star_rating),
+        ratingAvg: Number(row.rating_avg),
+        reviewCount: row.review_count,
+        setting: row.setting,
+        checkInTime: row.check_in_time.slice(0, 5),
+        checkOutTime: row.check_out_time.slice(0, 5),
+        images: imageResult.rows.map((image) => ({ url: image.url, alt: image.alt_text })),
+        amenities: amenityResult.rows.map((amenity) => ({ id: Number(amenity.id), name: amenity.name })),
+        policies: policyResult.rows,
     };
 }
 
@@ -175,37 +175,35 @@ export async function getNextStayRooms(hotelId: number, stay: StayRequest): Prom
     await apiTestingNextStayHotels(hotelId);
 
     /**
- * Refined Inventory 
- * 
- * For each individual room category, this block calculates:
- * 1. Temporal Completeness: Number of active inventory rows found within the date range.
- * 2. Capacity Ceiling: The minimum available stock (bottleneck) on any single night.
- * 3. Aggregated Quote: The cumulative total price across the entire booking window.
- */
-   const result = await pool.query<RoomRow>(
-      `SELECT rt.id, rt.description, rt.adults, rt.children, rt.bed_type,
+     * For each room type this calculates:
+     * 1. stocked_nights: how many inventory rows exist inside the date range
+     * 2. min_units: the lowest stock on any single night (the bottleneck)
+     * 3. stay_cents: the summed price across the whole stay
+     */
+    const result = await pool.query<RoomRow>(
+        `SELECT rt.id, rt.name, rt.description, rt.adults, rt.children, rt.bed_type,
                 rt.base_price_cents,
                 COUNT(ri.stay_date)::int AS stocked_nights,
                 MIN(ri.units_available)::int AS min_units,
-                ROUND(AVG(COALESCE(ri.price_override_cents, rt.base_price)))::int AS nightly_cents,
+                ROUND(AVG(COALESCE(ri.price_override_cents, rt.base_price_cents)))::int AS nightly_cents,
                 SUM(COALESCE(ri.price_override_cents, rt.base_price_cents))::int AS stay_cents
-       FROM room_types rt
-       LEFT JOIN room_intentory ri
-            ON ri.room_type_id = ri.id
-           AND ri.stay_date >= $2::date
-           AND ri.stay_date < $3::date
-       WHERE ri.hotel_id = $1
-       GROUP BY rt.id
-       ORDER BY rt.base_price_cents, rt.id`,
-       [hotelId, stay.checkIn, stay.checkOut]
-   );
+         FROM room_types rt
+         LEFT JOIN rooms_inventory ri
+              ON ri.room_type_id = rt.id
+             AND ri.stay_date >= $2::date
+             AND ri.stay_date < $3::date
+         WHERE rt.hotel_id = $1
+         GROUP BY rt.id
+         ORDER BY rt.base_price_cents, rt.id`,
+        [hotelId, stay.checkIn, stay.checkOut]
+    );
 
-   let nights: number | null = null;
-   if (stay.checkIn !== null && stay.checkOut !== null){
-      nights = countNights(stay.checkIn, stay.checkOut);
-   }
+    let nights: number | null = null;
+    if (stay.checkIn !== null && stay.checkOut !== null){
+        nights = countNights(stay.checkIn, stay.checkOut);
+    }
 
-   const rooms: RoomOption[] = result.rows.map((row) => {
+    const rooms: RoomOption[] = result.rows.map((row) => {
         const isValid = row.adults * stay.rooms >= stay.adults && row.children * stay.rooms >= stay.children;
 
         let available: boolean | null = null;
@@ -233,15 +231,15 @@ export async function getNextStayRooms(hotelId: number, stay: StayRequest): Prom
             isValid: isValid,
             available: available,
         };
-   });
+    });
 
-   const best = rooms.find((room) => room.isValid && room.available !== false);
+    const best = rooms.find((room) => room.isValid && room.available !== false);
 
-   return {
+    return {
         nights: nights,
         rooms: rooms,
         bestRoomId: best === undefined ? null : best.id,
-   };
+    };
 }
 
 export async function getHotelReviews(hotelId: number): Promise<ReviewItem[]>{
@@ -249,7 +247,7 @@ export async function getHotelReviews(hotelId: number): Promise<ReviewItem[]>{
 
     const result = await pool.query<ReviewRow>(
         `SELECT r.id, r.rating, r.comment, r.created_at,
-            split_part(u.name, '', 1) AS first_name
+            split_part(u.name, ' ', 1) AS first_name
         FROM reviews r
         JOIN users u ON u.id = r.user_id
         WHERE r.hotel_id = $1
