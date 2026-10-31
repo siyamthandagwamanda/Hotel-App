@@ -3,7 +3,7 @@ import type { TouchEvent, UIEvent } from 'react';
 import type { DeckPageData } from './../../utils/homePageUtils.js';
 import { useAppDispatch, useAppSelector } from '../../hooks/storeHooks';
 import { setCurrentPage } from '../../slices/journeySlice.js';
-import './../../styles/HomePaper.module.css';
+import './../../styles/HomePaper.css';
 
 interface DeckPagerProps {
   pages: DeckPageData[];

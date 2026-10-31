@@ -5,15 +5,14 @@
   flex-direction: column;
 }
 
-/* Master horizontal scrolling path leveraging CSS Scroll Snap engines natively */
 .pager-track {
   flex: 1;
   min-height: 0;
   display: flex;
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-snap-type: x mandatory; /* Snaps pages firmly into position on swipe release */
-  scrollbar-width: none; /* Masks scrollbars completely on Firefox browser viewports */
+  scroll-snap-type: x mandatory; 
+  scrollbar-width: none;
   container-type: size;
 }
 

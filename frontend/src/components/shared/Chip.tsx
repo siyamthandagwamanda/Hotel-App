@@ -1,4 +1,4 @@
-import './../../styles/Chip.module.css';
+import './../../styles/Chip.css';
 
 interface ChipProps{
     label: string;
