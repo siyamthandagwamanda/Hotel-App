@@ -10,7 +10,7 @@ import { setCurrentPage } from '../slices/journeySlice';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { fetchShelvesByCity } from '../slices/hotelSlices';
 import selectShelfCity from '../hotel/searchSelector';
-//import '../styles/HomePage.css';
+import '../styles/HomePage.css';
 
 interface HomeDeckPageProps {
   onBackToLanding: () => void;

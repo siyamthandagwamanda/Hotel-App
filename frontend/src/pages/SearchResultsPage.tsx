@@ -10,7 +10,7 @@ import { describeSearch } from './../utils/describeSearch';
 import { countActiveFilters } from './../utils/countFilter';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { useNavigate } from 'react-router-dom';
-//import './SearchResultsPage.css';
+import './../styles/SearchResultsPage.css';
 
 export type SortOrder = 'recommended' | 'price_asc' | 'price_desc' | 'rating';
 
