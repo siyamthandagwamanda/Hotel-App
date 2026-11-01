@@ -3,7 +3,8 @@ import type { TouchEvent, UIEvent } from 'react';
 import type { DeckPageData } from './../../utils/homePageUtils.js';
 import { useAppDispatch, useAppSelector } from '../../hooks/storeHooks';
 import { setCurrentPage } from '../../slices/journeySlice.js';
-import './../../styles/HomePaper.module.css';
+import { toggleFavourite } from '../../slices/favouriteSlice';
+import './../../styles/HomePaper.css';
 
 interface DeckPagerProps {
   pages: DeckPageData[];
@@ -12,11 +13,22 @@ interface DeckPagerProps {
 
 const DOTS_SWIPE_DISTANCE = 50;
 
+//so shelf numbers run 01, 02, 03 across
+function pageOffset(pages: DeckPageData[], pageId: string): number {
+  let count = 0;
+  for (const page of pages) {
+    if (page.id === pageId) break;
+    count += page.shelves.length;
+  }
+  return count;
+}
+
 export function DeckPager({ pages, onOpenHotel }: DeckPagerProps) {
   const dispatch = useAppDispatch();
   
 
   const { currentPage } = useAppSelector((state) => state.journey);
+  const savedIds = useAppSelector((state) => state.favourites.hotelIds);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const placedOnce = useRef(false);
@@ -76,32 +88,56 @@ export function DeckPager({ pages, onOpenHotel }: DeckPagerProps) {
         {pages.map((page) => (
           <section className="pager-page" key={page.id} aria-label={page.title}>
             <div className="pager-page-inner">
-              {page.shelves.map((shelf) => (
-                <section key={shelf.id} className="deck-shelf-section" style={{ padding: '16px 0' }}>
-                  <h2 className="deck-shelf-title" style={{ fontSize: '1.4rem', fontWeight: 800 }}>{shelf.title}</h2>
-                  <ul className="deck-hotel-list" style={{ listStyle: 'none', padding: 0 }}>
+              {page.shelves.map((shelf, shelfIndex) => (
+                <section key={shelf.id} className="deck-shelf-section">
+                  <div className="deck-shelf-head">
+                    <h2 className="deck-shelf-title">
+                      <span className="deck-shelf-number">
+                        {String(pageOffset(pages, page.id) + shelfIndex + 1).padStart(2, '0')}
+                      </span>
+                      {shelf.title}
+                    </h2>
+                    <span className="deck-shelf-hint">Swipe to explore &rarr;</span>
+                  </div>
+                  <div className="deck-row">
                     {shelf.hotels.map((hotel) => (
-                      <li
+                      <article
                         key={hotel.id}
-                        className="deck-hotel-item"
+                        className="deck-card"
                         onClick={() => onOpenHotel(hotel.id)}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          padding: '12px',
-                          background: '#f9f9f9',
-                          marginBottom: '8px',
-                          borderRadius: '6px',
-                          cursor: 'pointer'
-                        }}
                       >
-                        <span><strong>{hotel.name}</strong> — {hotel.city}</span>
-                        <span style={{ color: '#0066cc', fontWeight: 700 }}>
-                          R{(hotel.fromPriceCents / 100).toLocaleString('en-ZA')}
-                        </span>
-                      </li>
+                        <div className="deck-card-media">
+                          {hotel.images.length > 0 && (
+                            <img
+                              className="deck-card-img"
+                              src={hotel.images[0].url}
+                              alt={hotel.images[0].alt || hotel.name}
+                              loading="lazy"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            className="deck-card-heart"
+                            aria-label={savedIds.includes(hotel.id) ? 'Remove from favourites' : 'Save to favourites'}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              dispatch(toggleFavourite(hotel.id));
+                            }}
+                          >
+                            {savedIds.includes(hotel.id) ? '\u2665' : '\u2661'}
+                          </button>
+                        </div>
+                        <div className="deck-card-body">
+                          <span className="deck-card-name">{hotel.name}</span>
+                          <span className="deck-card-price">
+                            R{(hotel.fromPriceCents / 100).toLocaleString('en-ZA')}
+                          </span>
+                          <span className="deck-card-meta">{hotel.city}</span>
+                          <span className="deck-card-night">/ night</span>
+                        </div>
+                      </article>
                     ))}
-                  </ul>
+                  </div>
                 </section>
               ))}
             </div>

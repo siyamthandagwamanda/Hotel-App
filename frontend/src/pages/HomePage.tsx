@@ -10,7 +10,7 @@ import { setCurrentPage } from '../slices/journeySlice';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { fetchShelvesByCity } from '../slices/hotelSlices';
 import selectShelfCity from '../hotel/searchSelector';
-//import '../styles/HomePage.css';
+import '../styles/HomePage.css';
 
 interface HomeDeckPageProps {
   onBackToLanding: () => void;
@@ -69,14 +69,31 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
   return (
     <div className="deck">
       <header className="deck-header">
-        <button type="button" className="deck-home" onClick={onBackToLanding}>
-          <Logo colour="dark" />
-        </button>
+        <div className="deck-brand">
+          <button type="button" className="deck-home" onClick={onBackToLanding}>
+            <Logo colour="dark" />
+          </button>
+          <button type="button" className="deck-back" onClick={onBackToLanding}>
+            &lsaquo; Landing page
+          </button>
+        </div>
 
         <button type="button" className="deck-pill" onClick={() => setSearchOpen(true)}>
-          {describeSearch(city, checkIn, checkOut, adults)}
+          <span className="deck-pill-text">{describeSearch(city, checkIn, checkOut, adults)}</span>
+          <span className="deck-pill-go">Search</span>
         </button>
+
+        <nav className="deck-nav" aria-label="Main">
+          <span className="deck-nav-link">Stays</span>
+          <span className="deck-nav-link">My trips</span>
+          <span className="deck-avatar" aria-hidden="true">&#9786;</span>
+        </nav>
       </header>
+
+      <div className="deck-intro">
+        <p className="deck-eyebrow">The StayHop deck</p>
+        <h1 className="deck-heading">Find somewhere worth staying.</h1>
+      </div>
 
       {visibleChips.length > 0 && (
         <ChipBar
