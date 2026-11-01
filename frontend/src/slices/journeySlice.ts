@@ -9,7 +9,7 @@ interface JourneyState {
 }
 
 const initialState: JourneyState = {
-  landingScreen: false, 
+  landingScreen: true,
   currentPage: 0,
   rowScrollPositions: {},
 };
