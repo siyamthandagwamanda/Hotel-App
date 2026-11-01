@@ -10,7 +10,7 @@ import { describeSearch } from './../utils/describeSearch';
 import { countActiveFilters } from './../utils/countFilter';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { useNavigate } from 'react-router-dom';
-import './../styles/SearchResultsPage.css';
+import '../styles/SearchResultsPage.css';
 
 export type SortOrder = 'recommended' | 'price_asc' | 'price_desc' | 'rating';
 
@@ -75,7 +75,7 @@ export function SearchResultsPage() {
           <Logo colour="dark" />
         </button>
         
-        {/* Interactive Search Summary Pill: Tapping slides open the edit sheet drawer */}
+        {/*Tapping slides open the edit sheet drawer */}
         <button
           type="button"
           className="results-pill"
@@ -90,7 +90,7 @@ export function SearchResultsPage() {
         </button>
       </header>
 
-      {/* filter drawers and sorting selector fields */}
+      {/* sorting selector fields */}
       <div className="results-toolbar">
         <button
           type="button"

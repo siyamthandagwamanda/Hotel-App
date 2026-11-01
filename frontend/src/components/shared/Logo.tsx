@@ -11,7 +11,7 @@ function Logo({ colour = 'dark'}: LogoProps){
 
     return (
         <span className={`${LogoStyle.logo} ${colourClass}`}>
-            NEXT<span className={LogoStyle['logo-next-stay']}>STAY</span>
+            Stay<span className={LogoStyle['logo-next-stay']}>Hop</span>
         </span>
     )
 }
