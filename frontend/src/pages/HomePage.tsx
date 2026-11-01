@@ -91,7 +91,7 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
       </header>
 
       <div className="deck-intro">
-        <p className="deck-eyebrow">The StayHop deck</p>
+        <p className="deck-eyebrow">The NextStay Home</p>
         <h1 className="deck-heading">Find somewhere worth staying.</h1>
       </div>
 

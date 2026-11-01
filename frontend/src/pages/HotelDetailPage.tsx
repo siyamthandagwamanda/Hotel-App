@@ -2,12 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { toggleFavourite } from '../slices/favouriteSlice';
-import {
-  fetchHotelDetail,
-  fetchHotelRooms,
-  fetchHotelReviews,
-  clearDetail,
-} from '../slices/hotelDetailSlices';
+import { fetchHotelDetail, fetchHotelRooms, fetchHotelReviews, clearDetail, } from '../slices/hotelDetailSlices';
 import SearchSheet from '../components/shared/SearchSheet';
 import Gallery from '../components/shared/Gallery';
 import RoomList from '../components/shared/RoomList';
@@ -42,7 +37,7 @@ export function HotelDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // The hotel id comes from the address, for example /hotels/3
+  //hotel id comes from the address, /hotels/3
   const idNumber = Number(params.id);
   const hotelId = Number.isInteger(idNumber) && idNumber > 0 ? idNumber : null;
 

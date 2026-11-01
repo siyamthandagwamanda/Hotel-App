@@ -4,6 +4,8 @@ import { LandingPage } from '../../src/pages/LandingPage';
 import { setLandingScreen } from '../../src/slices/journeySlice';
 import '../styles/EntryPage.css';
 
+
+
 export function EntryPage() {
   const dispatch = useAppDispatch();
 
@@ -37,7 +39,7 @@ export function EntryPage() {
           <LandingPage onEnter={handleEnterCatalog} />
         </div>
 
-        {/*Home Catalog Discovery Shelves Deck View */}
+        {/*Shelves Deck*/}
         <div 
           className="entry-panel-pane" 
           aria-hidden={landingScreen}
