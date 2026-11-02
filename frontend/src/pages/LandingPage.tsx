@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { FormEvent, SyntheticEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Logo from '../components/shared/Logo';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { setCity, setDates, setGuests } from '../slices/searchSlice';
@@ -10,7 +9,6 @@ interface LandingPageProps {
   onEnter: () => void;
 }
 
-//Each image has a colour fallback in the CSS.
 const heroImage =
   'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=1200&q=80';
 const accentImage =
@@ -36,7 +34,6 @@ function todayIso(): string {
 
 export function LandingPage({ onEnter }: LandingPageProps) {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   const search = useAppSelector((state) => state.search);
 
@@ -68,7 +65,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
       }),
     );
     dispatch(setGuests({ adults: adults, children: 0, rooms: 1 }));
-    navigate('/search');
+    onEnter();
   };
 
   return (
@@ -98,7 +95,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
           </p>
 
           <h1 className="landing-headline">
-            NEXTSTAY
+            STAY
             <span className="landing-headline-accent">LESS</span>
             ORDINARY.
           </h1>
@@ -109,7 +106,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
           </p>
 
           <button type="button" className="landing-explore" onClick={onEnter}>
-            Explore our Home Page &rsaquo;
+            Explore the deck &rsaquo;
           </button>
         </div>
 
