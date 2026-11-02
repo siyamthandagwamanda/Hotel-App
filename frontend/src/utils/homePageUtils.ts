@@ -1,4 +1,4 @@
-import type { Shelf } from '../slices/hotelSlices.js';
+import type { HotelCardData, Shelf } from '../slices/hotelSlices.js';
 
 interface DeckPageDefinition {
   id: string;
@@ -55,6 +55,54 @@ export function buildDeckPages(shelves: Shelf[]): DeckPageData[] {
         shelves: pageShelves,
       });
     }
+  }
+
+  return pages;
+}
+
+
+const settingTitles: Record<string, string> = {
+  beach: 'Beach stays',
+  city: 'City stays',
+  safari: 'Safari lodges',
+  mountain: 'Mountain escapes',
+  countryside: 'Countryside retreats',
+};
+
+const SHELVES_PER_PAGE = 3;
+
+export function buildResultPages(results: HotelCardData[]): DeckPageData[] {
+  if (results.length === 0) {
+    return [];
+  }
+
+  const shelves: Shelf[] = [{ id: 'best-matches', title: 'Best matches', hotels: results.slice(0, 10) }];
+
+  const bySetting = new Map<string, HotelCardData[]>();
+  for (const hotel of results) {
+    const group = bySetting.get(hotel.setting);
+    if (group === undefined) {
+      bySetting.set(hotel.setting, [hotel]);
+    } else {
+      group.push(hotel);
+    }
+  }
+
+
+  if (bySetting.size > 1) {
+    for (const [setting, hotels] of bySetting) {
+      shelves.push({ id: setting, title: settingTitles[setting] ?? setting, hotels: hotels });
+    }
+  }
+
+  const pages: DeckPageData[] = [];
+  for (let start = 0; start < shelves.length; start += SHELVES_PER_PAGE) {
+    const pageNumber = start / SHELVES_PER_PAGE + 1;
+    pages.push({
+      id: 'results-' + pageNumber,
+      title: pageNumber === 1 ? 'Your stays' : 'More stays',
+      shelves: shelves.slice(start, start + SHELVES_PER_PAGE),
+    });
   }
 
   return pages;
