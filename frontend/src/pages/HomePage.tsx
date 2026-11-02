@@ -4,11 +4,14 @@ import Logo from '../components/shared/Logo';
 import ChipBar from '../components/shared/ChipBar';
 import DeckPager from '../components/shared/HomePaper';
 import SearchSheet from '../components/shared/SearchSheet';
-import { buildDeckPages, deckChips } from '../utils/homePageUtils';
+import FilterSheet from '../components/shared/FilterSheet';
+import { buildDeckPages, buildResultPages, deckChips } from '../utils/homePageUtils';
+import { countActiveFilters } from '../utils/countFilter';
 import { describeSearch } from '../utils/describeSearch';
 import { setCurrentPage } from '../slices/journeySlice';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
-import { fetchShelvesByCity } from '../slices/hotelSlices';
+import { fetchAllAmenities, fetchShelvesByCity, searchHotelInventory } from '../slices/hotelSlices';
+import { setAgainSearch } from '../slices/searchSlice';
 import selectShelfCity from '../hotel/searchSelector';
 import '../styles/HomePage.css';
 
@@ -25,19 +28,53 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
   const checkOut = useAppSelector((state) => state.search.checkOut);
   const adults = useAppSelector((state) => state.search.guests.adults);
 
+  const search = useAppSelector((state) => state.search);
   const shelfCity = useAppSelector(selectShelfCity);
 
+  const filterCount = countActiveFilters(search.filters);
+  const searchActive = search.city.trim() !== '' || search.checkIn !== null || filterCount > 0;
+
+  // A search shows matching stays as shelves. With no search, the deck shows the city shelves.
   useEffect(() => {
-    dispatch(fetchShelvesByCity(shelfCity));
-  }, [dispatch, shelfCity]);
+    dispatch(setCurrentPage(0));
+    if (searchActive) {
+      dispatch(
+        searchHotelInventory({
+          city: search.city,
+          checkIn: search.checkIn,
+          checkOut: search.checkOut,
+          adults: search.guests.adults,
+          children: search.guests.children,
+          rooms: search.guests.rooms,
+          minPrice: search.filters.minPrice,
+          maxPrice: search.filters.maxPrice,
+          stars: search.filters.stars,
+          amenityIds: search.filters.amenityIds,
+          propertyType: search.filters.propertyType,
+          sort: search.sort,
+          cursor: null,
+        }),
+      );
+    } else {
+      dispatch(fetchShelvesByCity(shelfCity));
+    }
+  }, [dispatch, search, searchActive, shelfCity]);
+
+  // The filter sheet lists facilities, so load them once
+  useEffect(() => {
+    dispatch(fetchAllAmenities());
+  }, [dispatch]);
 
   const { currentPage } = useAppSelector((state) => state.journey);
-  const { shelves, isLoading, error } = useAppSelector((state) => state.hotels);
+  const { shelves, searchResults, isLoading, error } = useAppSelector((state) => state.hotels);
 
   const [clickedChipId, setClickedChipId] = useState<string | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [sheet, setSheet] = useState<'none' | 'search' | 'filters'>('none');
 
-  const pages = shelves ? buildDeckPages(shelves) : [];
+  let pages = shelves ? buildDeckPages(shelves) : [];
+  if (searchActive) {
+    pages = buildResultPages(searchResults);
+  }
   const safePage = pages.length === 0 ? 0 : Math.min(Math.max(currentPage, 0), pages.length - 1);
   const activePage = pages.length > 0 ? pages[safePage] : null;
 
@@ -78,7 +115,7 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
           </button>
         </div>
 
-        <button type="button" className="deck-pill" onClick={() => setSearchOpen(true)}>
+        <button type="button" className="deck-pill" onClick={() => setSheet('search')}>
           <span className="deck-pill-text">{describeSearch(city, checkIn, checkOut, adults)}</span>
           <span className="deck-pill-go">Search</span>
         </button>
@@ -91,8 +128,25 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
       </header>
 
       <div className="deck-intro">
-        <p className="deck-eyebrow">The NextStay Home</p>
+        <p className="deck-eyebrow">The StayHop deck</p>
         <h1 className="deck-heading">Find somewhere worth staying.</h1>
+      </div>
+
+      <div className="deck-tools">
+        <button type="button" className="deck-tool-btn" onClick={() => setSheet('filters')}>
+          Filters
+          {filterCount > 0 && <span className="deck-tool-badge">{filterCount}</span>}
+        </button>
+        {searchActive && (
+          <>
+            <span className="deck-tool-count">
+              {isLoading ? 'Searching...' : searchResults.length + (searchResults.length === 1 ? ' stay found' : ' stays found')}
+            </span>
+            <button type="button" className="deck-tool-clear" onClick={() => dispatch(setAgainSearch())}>
+              Clear search
+            </button>
+          </>
+        )}
       </div>
 
       {visibleChips.length > 0 && (
@@ -107,7 +161,9 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
       {error && <p className="deck-message">Could not load shelves: {error}</p>}
 
       {!isLoading && !error && pages.length === 0 && (
-        <p className="deck-message">No hotels found. Try another city.</p>
+        <p className="deck-message">
+          {searchActive ? 'No stays match this search. Try other dates, fewer filters or a different place.' : 'No hotels found. Try another city.'}
+        </p>
       )}
 
       {pages.length > 0 && (
@@ -119,15 +175,11 @@ export function HomeDeckPage({ onBackToLanding }: HomeDeckPageProps) {
         </div>
       )}
 
-      {searchOpen && (
-        <SearchSheet
-          onClose={() => setSearchOpen(false)}
-          onSubmit={() => {
-            setSearchOpen(false);
-            navigate('/search');
-          }}
-        />
+      {sheet === 'search' && (
+        <SearchSheet onClose={() => setSheet('none')} onSubmit={() => setSheet('none')} />
       )}
+
+      {sheet === 'filters' && <FilterSheet onClose={() => setSheet('none')} />}
     </div>
   );
 }
