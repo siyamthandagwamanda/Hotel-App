@@ -1,0 +1,275 @@
+/* Home deck: header, search pill and messages */
+
+.deck {
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.deck-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.deck-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: none;
+}
+
+.deck-home {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.deck-back {
+  display: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deck-pill {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-chip);
+  background: var(--color-white);
+  color: var(--color-muted);
+  font-size: var(--text-base);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 76, 92, 0.08);
+}
+
+.deck-pill-text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deck-pill-go {
+  flex: none;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-chip);
+  background: var(--color-action);
+  color: var(--color-white);
+  font-weight: 700;
+}
+
+.deck-nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-4);
+  font-weight: 600;
+}
+
+.deck-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  font-size: var(--text-lg);
+}
+
+/* Big heading: only where there is room, so the shelves keep their height on phones */
+.deck-intro {
+  display: none;
+  flex: none;
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.deck-eyebrow {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.deck-heading {
+  max-width: 640px;
+  margin-top: var(--space-2);
+  font-size: clamp(32px, 4vw, 52px);
+  letter-spacing: -0.04em;
+  color: var(--color-primary);
+}
+
+.deck-message {
+  padding: var(--space-4);
+  color: var(--color-muted);
+}
+
+/* The pager fills the space left under the header and chips */
+.deck-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* One shelf: a title and a row of cards you swipe across */
+.deck-shelf-section {
+  min-height: 0;
+}
+
+.deck-shelf-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.deck-shelf-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.deck-shelf-number {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-action);
+}
+
+.deck-shelf-hint {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.deck-row {
+  display: flex;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-1);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.deck-row::-webkit-scrollbar {
+  display: none;
+}
+
+.deck-card {
+  flex: 0 0 var(--card-w, 220px);
+  width: var(--card-w, 220px);
+  scroll-snap-align: start;
+  cursor: pointer;
+}
+
+.deck-card-media {
+  position: relative;
+}
+
+.deck-card-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+
+.deck-card-heart {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-primary);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.deck-card-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: var(--space-2);
+  padding: var(--space-2) var(--space-1) 0;
+}
+
+.deck-card-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deck-card-price {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-action);
+  text-align: right;
+}
+
+.deck-card-meta,
+.deck-card-night {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.deck-card-night {
+  text-align: right;
+}
+
+@media (min-width: 768px) {
+  .deck-header,
+  .deck-shelf-head,
+  .deck-row {
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+  }
+}
+
+@media (min-width: 900px) {
+  .deck-back,
+  .deck-nav {
+    display: flex;
+  }
+
+  .deck-pill {
+    flex: 0 1 520px;
+    margin-left: auto;
+  }
+}
+
+@media (min-width: 900px) and (min-height: 1000px) {
+  .deck-intro {
+    display: block;
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+  }
+}

@@ -1,28 +1,48 @@
 import express from 'express';
 import cors from 'cors';
-import statusRouter from './routes/status.js';
-import hotelRouter from './routes/hotelRoutes.js';
-import { runMigrations } from './services/tableService.js';
-import { seedDatabase } from './services/seedService.js';
+import { env } from './config/env';
+import statusRouter from './routes/status';
+import hotelRouter from './routes/hotelRoutes';
+import { runMigrations } from './services/tableService';
+import { seedDatabase } from './services/seedService';
+import { notFound, errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: env.clientOrigin }));
+
 app.use(express.json());
 
 app.use('/api', statusRouter);
+
 app.use('/api/hotels', hotelRouter);
 
-const PORT = 3000;
+app.use(notFound);
+
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 3000;
 
 
-console.log('🔄 Setting up database tables...');
-runMigrations();
 
-console.log('🏨 Seeding hotel mock data...');
-seedDatabase(); 
+export async function startServer(){
+    try{
+        console.log('🔄 Setting up database tables...');
+        await runMigrations();
+
+        console.log('🏨 Seeding hotel mock data...');
+        await seedDatabase(); 
+
+        app.listen(PORT, () => {
+          console.log(`Server is running on port ${PORT}`);
+        });
+        
+    }catch (error) {
+        console.log('Failed to initialize database server:', error)
+    }
+}
+
+startServer();
 
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+

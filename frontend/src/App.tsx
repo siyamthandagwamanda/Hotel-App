@@ -1,16 +1,16 @@
-import { useAppSelector } from "./hooks/storeHooks"
+import { Route, Routes } from "react-router-dom";
+import { EntryPage } from './pages/EntryPage';
+import { SearchResultsPage } from './pages/SearchResultsPage'
+import { HotelDetailPage } from './pages/HotelDetailPage'
 
-function App() {
-
-  const {city, guests} = useAppSelector((state) => state.search);
-
-  return (
-    <main>
-      <h1>NextStay</h1>
-      <p>City: {city === '' ? 'not chosen' : city}</p>
-      <p>Adults: {guests.adults}</p>
-    </main>
-  );
+export function App(){
+  return(
+    <Routes>
+      <Route path="/" element={ <EntryPage /> }/>
+      <Route path="/search" element={ <SearchResultsPage /> }/>
+      <Route path="/hotels/:id" element={ <HotelDetailPage/> } />
+    </Routes>
+  )
 }
 
 export default App;
