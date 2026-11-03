@@ -1,6 +1,7 @@
 import {useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import './../../styles/BottomSheet.css';
+import { createPortal } from "react-dom";
+import './../styles/BottomSheet.css';
 
 interface BottomSheetProps{
     title: string;
@@ -72,7 +73,8 @@ export function BottomSheet({title, onClose, footer, children}: BottomSheetProps
         };
     }, []);
 
-    return(
+    
+    return createPortal(
         <div className="sheet-backdrop" onClick={onClose}>
             <div
                 className="sheet-panel"
@@ -97,7 +99,8 @@ export function BottomSheet({title, onClose, footer, children}: BottomSheetProps
                 <div className="sheet-body">{children}</div>
                 {footer !== undefined && <div className="sheet-footer">{footer}</div>}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
