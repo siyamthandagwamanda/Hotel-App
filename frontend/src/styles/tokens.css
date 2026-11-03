@@ -31,5 +31,14 @@ it instantly updates across your entire application. */
     --text-xl: 28px;
     --text-display: 48px;
 
-    --content-max: 1200px;
+    --content-max: 1400px;
+    --gutter: var(--space-4);
+    
+    --page-pad: max(var(--gutter), calc((100vw - var(--content-max)) / 2 + var(--gutter)));
+}
+
+@media (min-width: 768px) {
+    :root {
+        --gutter: var(--space-8);
+    }
 }
