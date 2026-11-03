@@ -1,0 +1,25 @@
+/* Entry page: landing and home deck sit side by side and slide */
+
+.entry-viewport-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.entry-carousel-track {
+  display: flex;
+  align-items: flex-start;
+  width: 200%;
+  transition: transform 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.entry-panel-pane {
+  width: 50%;
+  flex: none;
+}
+
+/* The pane you cannot see is clipped to one screen, so the page height follows the visible pane */
+.entry-panel-pane[aria-hidden='true'] {
+  height: 100svh;
+  overflow: hidden;
+}

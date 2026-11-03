@@ -1,7 +1,7 @@
 .chip-bar {
   display: flex;
   gap: var(--space-2);
-  padding: 0 var(--space-4) var(--space-3);
+  padding: 0 var(--page-pad) var(--space-3);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -26,4 +26,9 @@
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-white);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
 }

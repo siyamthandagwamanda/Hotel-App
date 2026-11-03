@@ -404,3 +404,10 @@
     top: 120px;
   }
 }
+/* Wide screens: a shorter gallery so rooms and the booking card stay in view */
+@media (min-width: 900px) {
+  .gallery {
+    aspect-ratio: auto;
+    height: clamp(320px, 52vh, 560px);
+  }
+}
