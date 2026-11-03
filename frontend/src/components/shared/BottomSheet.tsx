@@ -1,7 +1,12 @@
 import {useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
+<<<<<<< Updated upstream
 import styles from './../styles/BottomSheet.css';
+=======
+import './../../styles/BottomSheet.css';
+
+>>>>>>> Stashed changes
 
 interface BottomSheetProps{
     title: string;
