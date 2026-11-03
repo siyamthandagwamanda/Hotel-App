@@ -1,5 +1,5 @@
 import type { PoolClient } from 'pg';
-import { pool } from '../config/pool.js';
+import { pool } from '../config/pool';
 
 type Setting = 'beach' | 'city' | 'safari' | 'mountain' | 'countryside' ;
 
@@ -29,6 +29,83 @@ type SeedHotel = {
   amenities: string[];
   rooms: SeedRoom[];
 };
+
+
+function unsplash(photoId: string): string {
+  return 'https://images.unsplash.com/' + photoId + '?auto=format&fit=crop&w=1200&q=80';
+}
+
+const hotelPhotos: Record<string, string[]> = {
+  // Beach
+  'sea-breeze': ['photo-1520250497591-112f2f40a3f4', 'photo-1507525428034-b723cf961d3e', 'photo-1540541338287-41700207dee6'],
+  'abathwa-lodge': ['photo-1571896349842-33c89424de2d', 'photo-1519046904884-53103b34b206', 'photo-1582719478250-c89cae4dc85b'],
+  'marina-lodge': ['photo-1566073771259-6a8506099945', 'photo-1499793983690-e29da59ef1c2', 'photo-1573843981267-be1999ff37cd'],
+
+  // City
+  'gwamanda-pulse': ['photo-1542314831-068cd1dbfeeb', 'photo-1560448204-e02f11c3d0e2', 'photo-1584132967334-10e028bd69f7'],
+  'city-loft': ['photo-1522708323590-d24dbb6b0267', 'photo-1502672260266-1c1ef2d93688', 'photo-1493809842364-78817add7ffb'],
+  'table-view': ['photo-1551882547-ff40c63fe5fa', 'photo-1564501049412-61c2a3083791', 'photo-1578683010236-d716f9a3f461'],
+  'jozi-central': ['photo-1455587734955-081b22074882', 'photo-1445991842772-097fea258e7b', 'photo-1496417263034-38ec4f0b665a'],
+  'sandton-sky': ['photo-1590490360182-c33d57733427', 'photo-1568495248636-6432b97bd949', 'photo-1517840901100-8179e982acb7'],
+
+  // Safari
+  'safari-camp': ['photo-1516426122078-c23e76319801', 'photo-1523805009345-7448845a9e53', 'photo-1470246973918-29a93221c455'],
+  'nzuzwenhle-ridge': ['photo-1549366021-9f761d450615', 'photo-1535941339077-2dd1c7963098', 'photo-1504173010664-32509aeebb62'],
+
+  // Mountain
+  'ridge-stay': ['photo-1464822759023-fed622ff2c3b', 'photo-1506905925346-21bda4d32df4', 'photo-1519681393784-d120267933ba'],
+
+  // Countryside
+  'winelands': ['photo-1500382017468-9049fed747ef', 'photo-1472214103451-9374bd1c798e', 'photo-1473448912268-2022ce9509d8'],
+  'zanokuhle-stars': ['photo-1470071459604-3b5ec3a7fe05', 'photo-1441974231531-c6227db76b6e', 'photo-1486870591958-9b9d0d1dda99'],
+  'manelisi-mist': ['photo-1470770841072-f978cf4d019e', 'photo-1561501900-3701fa6a0864', 'photo-1549294413-26f195200c16'],
+};
+
+function photosFor(hotel: SeedHotel): string[] {
+  const ids = hotelPhotos[hotel.slug] ?? [];
+  return ids.map((id) => unsplash(id));
+}
+
+// Warns at start-up if a photo is reused or a hotel has none
+function checkPhotos(hotelList: SeedHotel[]): void {
+  const seen = new Set<string>();
+  for (const hotel of hotelList) {
+    const photos = photosFor(hotel);
+    if (photos.length === 0) {
+      console.warn('Seed: no photos for ' + hotel.slug);
+    }
+    for (const photo of photos) {
+      if (seen.has(photo)) {
+        console.warn('Seed: photo used twice, ' + photo);
+      }
+      seen.add(photo);
+    }
+  }
+}
+
+async function insertImages(client: PoolClient, hotelId: number, hotel: SeedHotel): Promise<void> {
+  const photos = photosFor(hotel);
+  for (let i = 0; i < photos.length; i++) {
+    await client.query(
+      'INSERT INTO hotel_images (hotel_id, url, alt_text, position) VALUES ($1, $2, $3, $4)',
+      [hotelId, photos[i], hotel.name + ' photo ' + (i + 1), i],
+    );
+  }
+}
+
+// Makes the stored photos match the list above, so changing a photo here updates the database on the next start
+async function syncImages(client: PoolClient, hotelId: number, hotel: SeedHotel): Promise<void> {
+  const wanted = photosFor(hotel);
+  const stored = await client.query('SELECT url FROM hotel_images WHERE hotel_id = $1 ORDER BY position', [hotelId]);
+  const storedUrls = stored.rows.map((row: { url: string }) => row.url);
+
+  if (storedUrls.length === wanted.length && storedUrls.every((url: string, index: number) => url === wanted[index])) {
+    return;
+  }
+
+  await client.query('DELETE FROM hotel_images WHERE hotel_id = $1', [hotelId]);
+  await insertImages(client, hotelId, hotel);
+}
 
 const amenityNames: string[] = [
   'Ocean view', 'Fast Wi-Fi', 'Free parking', 'Pool', 'Breakfast',
@@ -215,7 +292,9 @@ const hotels: SeedHotel[] = [
 ];
 
 export async function seedDatabase(): Promise<void> {
-  const client = await pool.connect();
+  checkPhotos(hotels);
+
+  const client: PoolClient = await pool.connect();
   try {
     await client.query('BEGIN');
 
@@ -223,7 +302,7 @@ export async function seedDatabase(): Promise<void> {
     const amenityMap = new Map<string, number>();
     for (const name of amenityNames) {
       const res = await client.query(
-        'INSERT INTO amenities (name) VALUES (\$1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id',
+        'INSERT INTO amenities (name) VALUES ($1) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id',
         [name],
       );
       amenityMap.set(name, Number(res.rows[0].id));
@@ -232,8 +311,12 @@ export async function seedDatabase(): Promise<void> {
     
     for (const hotel of hotels) {
   
-      const existing = await client.query('SELECT id FROM hotels WHERE name = \$1', [hotel.name]);
-      if (existing.rowCount && existing.rowCount > 0) continue;
+      const existing = await client.query('SELECT id FROM hotels WHERE name = $1', [hotel.name]);
+      if (existing.rowCount && existing.rowCount > 0) {
+        // Already seeded: keep its photos in step with the list above
+        await syncImages(client, Number(existing.rows[0].id), hotel);
+        continue;
+      }
 
       const hotelRes = await client.query(
         `INSERT INTO hotels
@@ -254,7 +337,7 @@ export async function seedDatabase(): Promise<void> {
         const amenityId = amenityMap.get(amenityName);
         if (amenityId) {
           await client.query(
-            'INSERT INTO hotel_amenities (hotel_id, amenity_id) VALUES (\$1, \$2) ON CONFLICT DO NOTHING',
+            'INSERT INTO hotel_amenities (hotel_id, amenity_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
             [hotelId, amenityId],
           );
         }
@@ -263,12 +346,14 @@ export async function seedDatabase(): Promise<void> {
      
       for (const policy of standardPolicies) {
         await client.query(
-          'INSERT INTO hotel_policies (hotel_id, type, text) VALUES (\$1, \$2, \$3)',
+          'INSERT INTO hotel_policies (hotel_id, type, text) VALUES ($1, $2, $3)',
           [hotelId, policy.type, policy.text],
         );
       }
 
     
+      await insertImages(client, hotelId, hotel);
+
       for (const room of hotel.rooms) {
         const roomRes = await client.query(
           `INSERT INTO room_types
@@ -290,8 +375,22 @@ export async function seedDatabase(): Promise<void> {
       }
     }
 
+ 
+    // Hotels an admin created (created_by set) and hotels with bookings are kept.
+    const currentNames = hotels.map((hotel) => hotel.name);
+    const removed = await client.query(
+      `DELETE FROM hotels h
+       WHERE h.created_by IS NULL
+         AND h.name <> ALL($1::text[])
+         AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.hotel_id = h.id)`,
+      [currentNames],
+    );
+    if (removed.rowCount) {
+      console.log('Removed ' + removed.rowCount + ' outdated seed hotels.');
+    }
+
     await client.query('COMMIT');
-    console.log(' Database seeded successfully.');
+    console.log('Database seeded successfully.');
 
   } catch (error) {
     await client.query('ROLLBACK');
