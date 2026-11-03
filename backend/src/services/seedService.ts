@@ -1,5 +1,5 @@
 import type { PoolClient } from 'pg';
-import { pool } from '../config/pool.js';
+import { pool } from '../config/pool';
 
 type Setting = 'beach' | 'city' | 'safari' | 'mountain' | 'countryside' ;
 
@@ -35,9 +35,6 @@ function unsplash(photoId: string): string {
   return 'https://images.unsplash.com/' + photoId + '?auto=format&fit=crop&w=1200&q=80';
 }
 
-// Each hotel has its own photos and no photo is used twice.
-// Photo IDs are unverified: run "node scripts/checkImages.mjs" from the backend folder to list any that fail.
-// To swap a photo: open unsplash.com, search the scene, click a photo and copy the part of its URL after "photo-".
 const hotelPhotos: Record<string, string[]> = {
   // Beach
   'sea-breeze': ['photo-1520250497591-112f2f40a3f4', 'photo-1507525428034-b723cf961d3e', 'photo-1540541338287-41700207dee6'],
@@ -69,7 +66,7 @@ function photosFor(hotel: SeedHotel): string[] {
   return ids.map((id) => unsplash(id));
 }
 
-
+// Warns at start-up if a photo is reused or a hotel has none
 function checkPhotos(hotelList: SeedHotel[]): void {
   const seen = new Set<string>();
   for (const hotel of hotelList) {
@@ -316,7 +313,7 @@ export async function seedDatabase(): Promise<void> {
   
       const existing = await client.query('SELECT id FROM hotels WHERE name = $1', [hotel.name]);
       if (existing.rowCount && existing.rowCount > 0) {
-        
+        // Already seeded: keep its photos in step with the list above
         await syncImages(client, Number(existing.rows[0].id), hotel);
         continue;
       }
@@ -378,7 +375,8 @@ export async function seedDatabase(): Promise<void> {
       }
     }
 
-
+ 
+    // Hotels an admin created (created_by set) and hotels with bookings are kept.
     const currentNames = hotels.map((hotel) => hotel.name);
     const removed = await client.query(
       `DELETE FROM hotels h
