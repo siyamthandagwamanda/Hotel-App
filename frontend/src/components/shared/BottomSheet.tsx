@@ -1,10 +1,15 @@
 import {useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { createPortal } from "react-dom";
 import styles from './../styles/BottomSheet.css';
 =======
 import './../../styles/BottomSheet.css';
+>>>>>>> css/presentation
+=======
+import { createPortal } from "react-dom";
+import './../styles/BottomSheet.css';
 >>>>>>> css/presentation
 
 interface BottomSheetProps{
