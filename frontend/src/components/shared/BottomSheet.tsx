@@ -3,14 +3,20 @@ import type { ReactNode } from "react";
 <<<<<<< HEAD
 <<<<<<< HEAD
 import { createPortal } from "react-dom";
+<<<<<<< Updated upstream
 import styles from './../styles/BottomSheet.css';
 =======
 import './../../styles/BottomSheet.css';
+<<<<<<< HEAD
 >>>>>>> css/presentation
 =======
 import { createPortal } from "react-dom";
 import './../styles/BottomSheet.css';
 >>>>>>> css/presentation
+=======
+
+>>>>>>> Stashed changes
+>>>>>>> shared/component
 
 interface BottomSheetProps{
     title: string;
