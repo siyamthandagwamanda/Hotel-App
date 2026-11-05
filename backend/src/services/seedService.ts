@@ -1,5 +1,5 @@
 import type { PoolClient } from 'pg';
-import { pool } from '../config/pool.js';
+import { pool } from '../config/pool';
 
 type Setting = 'beach' | 'city' | 'safari' | 'mountain' | 'countryside' ;
 
@@ -29,6 +29,7 @@ type SeedHotel = {
   amenities: string[];
   rooms: SeedRoom[];
 };
+
 
 function unsplash(photoId: string): string {
   return 'https://images.unsplash.com/' + photoId + '?auto=format&fit=crop&w=1200&q=80';
@@ -65,6 +66,7 @@ function photosFor(hotel: SeedHotel): string[] {
   return ids.map((id) => unsplash(id));
 }
 
+// Warns at start-up if a photo is reused or a hotel has none
 function checkPhotos(hotelList: SeedHotel[]): void {
   const seen = new Set<string>();
   for (const hotel of hotelList) {
@@ -91,6 +93,7 @@ async function insertImages(client: PoolClient, hotelId: number, hotel: SeedHote
   }
 }
 
+// Makes the stored photos match the list above, so changing a photo here updates the database on the next start
 async function syncImages(client: PoolClient, hotelId: number, hotel: SeedHotel): Promise<void> {
   const wanted = photosFor(hotel);
   const stored = await client.query('SELECT url FROM hotel_images WHERE hotel_id = $1 ORDER BY position', [hotelId]);
@@ -141,7 +144,7 @@ function twoRooms(standardRand: number, bedType: string): SeedRoom[] {
 
 const hotels: SeedHotel[] = [
   {
-    slug: 'sea-breeze', name: 'Manzini-Resort',
+    slug: 'sea-breeze', name: 'Sea Breeze Hotel',
     description: 'Wake to Indian Ocean views at this easygoing coastal hideaway, with a saltwater pool and the promenade within reach.',
     city: 'Durban', province: 'KwaZulu-Natal', address: '12 Lighthouse Road, Umhlanga',
     latitude: -29.7268, longitude: 31.0856, starRating: 4.5, setting: 'beach',
@@ -149,18 +152,26 @@ const hotels: SeedHotel[] = [
     amenities: ['Ocean view', 'Fast Wi-Fi', 'Free parking', 'Pool', 'Breakfast'],
     rooms: twoRooms(1450, 'King'),
   },
+
   {
     slug: 'gwamanda-pulse',
     name: 'GwamandaPulse',
     description: 'A relaxed, pet-friendly boutique inn nestled in the scenic hills of Chase Valley, just minutes from the Liberty Midlands Mall and central Pietermaritzburg.',
-    city: 'Pietermaritzburg', province: 'KwaZulu-Natal', address: '42 Chase Valley Road, Chase Valley, Pietermaritzburg',
-    latitude: -29.5694, longitude: 30.2985, starRating: 3.5, setting: 'city',
-    ratingAvg: 8.2, reviewCount: 86,
+    city: 'Pietermaritzburg',
+    province: 'KwaZulu-Natal',
+    address: '42 Chase Valley Road, Chase Valley, Pietermaritzburg',
+    latitude: -29.5694,
+    longitude: 30.2985,
+    starRating: 3.5,
+    setting: 'city',
+    ratingAvg: 8.2,
+    reviewCount: 86,
     amenities: ['Fast Wi-Fi', 'Pool', 'Pet friendly', 'Free parking'],
     rooms: twoRooms(780, 'Queen'),
   },
+
   {
-    slug: 'abathwa-lodge', name: 'Abathwa Lodge',
+    slug: 'dune-lodge', name: 'Dune Lodge',
     description: 'Boutique lodge between the dunes and the sea in Ballito, with a spa and sunset terrace.',
     city: 'Ballito', province: 'KwaZulu-Natal', address: '5 Dune Crescent, Ballito',
     latitude: -29.539, longitude: 31.214, starRating: 4, setting: 'beach',
@@ -168,6 +179,7 @@ const hotels: SeedHotel[] = [
     amenities: ['Ocean view', 'Spa', 'Pool', 'Breakfast', 'Fast Wi-Fi'],
     rooms: twoRooms(1600, 'King'),
   },
+
   {
     slug: 'marina-lodge', name: 'Marina Lodge',
     description: 'Wooden lodge on the Knysna lagoon with a sun deck and a pool that looks over the water.',
@@ -177,6 +189,7 @@ const hotels: SeedHotel[] = [
     amenities: ['Pool', 'Breakfast', 'Fast Wi-Fi', 'Free parking', 'Braai area'],
     rooms: twoRooms(1200, 'Queen'),
   },
+
   {
     slug: 'ridge-stay', name: 'Ridge Stay',
     description: 'Mountain-view cabins above the Drakensberg valley, with a deck for every unit.',
@@ -186,17 +199,97 @@ const hotels: SeedHotel[] = [
     amenities: ['Fast Wi-Fi', 'Braai area', 'Free parking', 'Pet friendly', 'Breakfast'],
     rooms: twoRooms(950, 'Queen'),
   },
+
   {
     slug: 'city-loft', name: 'City Loft',
     description: 'Bright, modern loft apartments in the heart of Cape Town, close to restaurants and the waterfront.',
-    city: 'Cape Town', province: 'Western Cape', address: '42 Long Street, Cape Town',
+    city: 'Cape Town', province: 'Western Cape', address: '14 Loop Street, Cape Town',
     latitude: -33.9249, longitude: 18.4241, starRating: 4, setting: 'city',
-    ratingAvg: 8.9, reviewCount: 112,
-    amenities: ['Fast Wi-Fi', 'Pool', 'Breakfast'],
-    rooms: twoRooms(1100, 'Double'),
+    ratingAvg: 8.7, reviewCount: 210,
+    amenities: ['Fast Wi-Fi', 'Free parking', 'Breakfast'],
+    rooms: twoRooms(850, 'Queen'),
+  },
+
+  {
+    slug: 'safari-camp', name: 'Kruger Safari Camp',
+    description: 'Tented suites on the edge of the reserve, with guided game drives at dawn and dusk.',
+    city: 'Hluhluwe', province: 'KwaZulu-Natal', address: 'Reserve Gate Road, Hluhluwe',
+    latitude: -28.02, longitude: 32.27, starRating: 5, setting: 'safari',
+    ratingAvg: 9.5, reviewCount: 188,
+    amenities: ['Game drives', 'Pool', 'Breakfast', 'Braai area', 'Spa'],
+    rooms: twoRooms(3200, 'King'),
+  },
+
+  {
+    slug: 'table-view', name: 'Table View Suites',
+    description: 'Contemporary suites with a view of Table Mountain, a rooftop pool and a short walk to the V&A Waterfront.',
+    city: 'Cape Town', province: 'Western Cape', address: '3 Beach Road, Sea Point',
+    latitude: -33.9150, longitude: 18.3870, starRating: 4.5, setting: 'city',
+    ratingAvg: 8.9, reviewCount: 176,
+    amenities: ['Fast Wi-Fi', 'Pool', 'Breakfast', 'Free parking'],
+    rooms: twoRooms(1350, 'King'),
+  },
+
+  {
+    slug: 'jozi-central', name: 'Jozi Central Hotel',
+    description: 'Friendly city hotel in Braamfontein, close to the Gautrain and the cultural district.',
+    city: 'Johannesburg', province: 'Gauteng', address: '40 De Korte Street, Braamfontein',
+    latitude: -26.1929, longitude: 28.0305, starRating: 4, setting: 'city',
+    ratingAvg: 8.4, reviewCount: 132,
+    amenities: ['Fast Wi-Fi', 'Free parking', 'Breakfast'],
+    rooms: twoRooms(990, 'Queen'),
+  },
+
+  {
+    slug: 'sandton-sky', name: 'Sandton Sky Lofts',
+    description: 'Luxury high-rise lofts in Sandton with skyline views, a spa and a heated pool.',
+    city: 'Johannesburg', province: 'Gauteng', address: '1 Rivonia Road, Sandton',
+    latitude: -26.1076, longitude: 28.0567, starRating: 5, setting: 'city',
+    ratingAvg: 9.2, reviewCount: 98,
+    amenities: ['Fast Wi-Fi', 'Pool', 'Spa', 'Breakfast', 'Free parking'],
+    rooms: twoRooms(2100, 'King'),
+  },
+
+  {
+    slug: 'winelands', name: 'Winelands Guesthouse',
+    description: 'Pet friendly guesthouse among the vineyards of Stellenbosch, with a pool and tasting terrace.',
+    city: 'Stellenbosch', province: 'Western Cape', address: '7 Vineyard Lane, Stellenbosch',
+    latitude: -33.9321, longitude: 18.8602, starRating: 4, setting: 'countryside',
+    ratingAvg: 9.1, reviewCount: 156,
+    amenities: ['Pool', 'Breakfast', 'Pet friendly', 'Fast Wi-Fi', 'Free parking'],
+    rooms: twoRooms(1250, 'Queen'),
+  },
+
+  {
+    slug: 'karoo-stars', name: 'Karoo Stars Lodge',
+    description: 'Quiet pet friendly lodge under the Karoo sky, famous for stargazing and slow mornings.',
+    city: 'Prince Albert', province: 'Western Cape', address: '9 Church Street, Prince Albert',
+    latitude: -33.2247, longitude: 22.0296, starRating: 3.5, setting: 'countryside',
+    ratingAvg: 8.6, reviewCount: 64,
+    amenities: ['Pet friendly', 'Braai area', 'Breakfast', 'Free parking'],
+    rooms: twoRooms(690, 'Queen'),
+  },
+
+  {
+    slug: 'midlands-mist', name: 'Midlands Mist Cottages',
+    description: 'Cosy pet friendly cottages on the Midlands Meander, with fireplaces and misty morning walks.',
+    city: 'Howick', province: 'KwaZulu-Natal', address: 'Old Main Road, Howick',
+    latitude: -29.4783, longitude: 30.2339, starRating: 4, setting: 'countryside',
+    ratingAvg: 9.0, reviewCount: 82,
+    amenities: ['Pet friendly', 'Braai area', 'Fast Wi-Fi', 'Free parking'],
+    rooms: twoRooms(880, 'Queen'),
+  },
+
+  {
+    slug: 'elephant-ridge', name: 'Elephant Ridge Lodge',
+    description: 'Safari lodge overlooking a waterhole, with game drives and open-air dining.',
+    city: 'Mtubatuba', province: 'KwaZulu-Natal', address: 'Reserve Road, Mtubatuba',
+    latitude: -28.4167, longitude: 32.1833, starRating: 4, setting: 'safari',
+    ratingAvg: 9.2, reviewCount: 54,
+    amenities: ['Game drives', 'Pool', 'Breakfast', 'Braai area'],
+    rooms: twoRooms(1950, 'King'),
   }
 ];
-
 
 export async function seedDatabase(): Promise<void> {
   checkPhotos(hotels);
@@ -282,6 +375,7 @@ export async function seedDatabase(): Promise<void> {
       }
     }
 
+ 
     // Hotels an admin created (created_by set) and hotels with bookings are kept.
     const currentNames = hotels.map((hotel) => hotel.name);
     const removed = await client.query(
