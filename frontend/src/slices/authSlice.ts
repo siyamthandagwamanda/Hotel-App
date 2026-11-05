@@ -106,16 +106,9 @@ const authSlice = createSlice({
       }
     },
   },
-<<<<<<< HEAD
-// Register and sign in share the same lifecycle
-  extraReducers: (builder) => {
-    builder
-     
-=======
   extraReducers: (builder) => {
     builder
       // Register and sign in share the same lifecycle
->>>>>>> feat/Slices
       .addCase(registerAccount.pending, (state) => {
         state.status = 'loading';
         state.error = null;
