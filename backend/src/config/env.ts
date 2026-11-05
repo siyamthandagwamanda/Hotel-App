@@ -14,7 +14,7 @@ export const env = {
     port: Number(process.env.PORT ?? 3000),
     databaseUrl: getRequiredEnv('DATABASE_URL'),
     clientOrigin: getRequiredEnv('CLIENT_ORIGIN'),
-    paystackSecret: getRequiredEnv('PAYSTACK_SECRET'),
+    paystackSecret: getRequiredEnv('PAYSTACK_SECRET_KEY'),
     jwtSecret: getRequiredEnv('JWT_SECRET'),
     jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
 }
