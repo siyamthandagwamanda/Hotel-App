@@ -1,5 +1,5 @@
 import type { PoolClient } from 'pg';
-import { pool } from '../config/pool';
+import { pool } from '../config/pool.js';
 
 type Setting = 'beach' | 'city' | 'safari' | 'mountain' | 'countryside' ;
 
@@ -30,11 +30,12 @@ type SeedHotel = {
   rooms: SeedRoom[];
 };
 
-
 function unsplash(photoId: string): string {
   return 'https://images.unsplash.com/' + photoId + '?auto=format&fit=crop&w=1200&q=80';
 }
 
+
+// To swap a photo: open unsplash.com, search the scene, click a photo and copy the part of its URL after "photo-".
 const hotelPhotos: Record<string, string[]> = {
   // Beach
   'sea-breeze': ['photo-1520250497591-112f2f40a3f4', 'photo-1507525428034-b723cf961d3e', 'photo-1540541338287-41700207dee6'],
@@ -144,7 +145,7 @@ function twoRooms(standardRand: number, bedType: string): SeedRoom[] {
 
 const hotels: SeedHotel[] = [
   {
-    slug: 'sea-breeze', name: 'Sea Breeze Hotel',
+    slug: 'sea-breeze', name: 'Manzini-Resort',
     description: 'Wake to Indian Ocean views at this easygoing coastal hideaway, with a saltwater pool and the promenade within reach.',
     city: 'Durban', province: 'KwaZulu-Natal', address: '12 Lighthouse Road, Umhlanga',
     latitude: -29.7268, longitude: 31.0856, starRating: 4.5, setting: 'beach',
@@ -171,7 +172,7 @@ const hotels: SeedHotel[] = [
   },
 
   {
-    slug: 'dune-lodge', name: 'Dune Lodge',
+    slug: 'abathwa-lodge', name: 'Abathwa Lodge',
     description: 'Boutique lodge between the dunes and the sea in Ballito, with a spa and sunset terrace.',
     city: 'Ballito', province: 'KwaZulu-Natal', address: '5 Dune Crescent, Ballito',
     latitude: -29.539, longitude: 31.214, starRating: 4, setting: 'beach',
@@ -261,7 +262,7 @@ const hotels: SeedHotel[] = [
   },
 
   {
-    slug: 'karoo-stars', name: 'Karoo Stars Lodge',
+    slug: 'zanokuhle-stars', name: 'Zanokuhle Stars Lodge',
     description: 'Quiet pet friendly lodge under the Karoo sky, famous for stargazing and slow mornings.',
     city: 'Prince Albert', province: 'Western Cape', address: '9 Church Street, Prince Albert',
     latitude: -33.2247, longitude: 22.0296, starRating: 3.5, setting: 'countryside',
@@ -271,7 +272,7 @@ const hotels: SeedHotel[] = [
   },
 
   {
-    slug: 'midlands-mist', name: 'Midlands Mist Cottages',
+    slug: 'manelisi-mist', name: 'Manelisi Mist Cottages',
     description: 'Cosy pet friendly cottages on the Midlands Meander, with fireplaces and misty morning walks.',
     city: 'Howick', province: 'KwaZulu-Natal', address: 'Old Main Road, Howick',
     latitude: -29.4783, longitude: 30.2339, starRating: 4, setting: 'countryside',
@@ -281,7 +282,7 @@ const hotels: SeedHotel[] = [
   },
 
   {
-    slug: 'elephant-ridge', name: 'Elephant Ridge Lodge',
+    slug: 'nzuzwenhle-ridge', name: 'Nzuzwenhle Ridge Lodge',
     description: 'Safari lodge overlooking a waterhole, with game drives and open-air dining.',
     city: 'Mtubatuba', province: 'KwaZulu-Natal', address: 'Reserve Road, Mtubatuba',
     latitude: -28.4167, longitude: 32.1833, starRating: 4, setting: 'safari',
@@ -375,7 +376,7 @@ export async function seedDatabase(): Promise<void> {
       }
     }
 
- 
+    
     // Hotels an admin created (created_by set) and hotels with bookings are kept.
     const currentNames = hotels.map((hotel) => hotel.name);
     const removed = await client.query(
