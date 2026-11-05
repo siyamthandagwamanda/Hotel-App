@@ -57,3 +57,5 @@ export async function currentUser(req: Request, res: Response, next: NextFunctio
 router.post('/register', limitAttempts, register);
 router.post('/login', limitAttempts, login)
 router.get('/currentUser', requireAuth, currentUser)
+
+export default router;
