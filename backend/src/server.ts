@@ -3,17 +3,23 @@ import cors from 'cors';
 import { env } from './config/env';
 import statusRouter from './routes/status';
 import hotelRouter from './routes/hotelRoutes';
+import authRouter from './routes/authRoutes';
 import { runMigrations } from './services/tableService';
 import { seedDatabase } from './services/seedService';
 import { notFound, errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
+//render forwards requests through its own server. so trust it to pass on the visitor's
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: env.clientOrigin }));
 
-app.use(express.json());
+app.use(express.json({ limit: '50kb' }));
 
 app.use('/api', statusRouter);
+
+app.use('/api/auth', authRouter)
 
 app.use('/api/hotels', hotelRouter);
 
@@ -25,24 +31,25 @@ const PORT = process.env.PORT || 3000;
 
 
 
-export async function startServer(){
-    try{
-        console.log('🔄 Setting up database tables...');
+export async function startServer() {
+    try {
+        console.log('Setting up database tables...');
         await runMigrations();
 
-        console.log('🏨 Seeding hotel mock data...');
-        await seedDatabase(); 
+        console.log('Seeding hotel data...');
+        await seedDatabase();
 
-        app.listen(PORT, () => {
-          console.log(`Server is running on port ${PORT}`);
+        app.listen(env.port, () => {
+            console.log(`Server is running on port ${env.port}`);
         });
-        
-    }catch (error) {
-        console.log('Failed to initialize database server:', error)
+    } catch (error) {
+        console.log('Failed to start the server:', error);
+        process.exit(1);
     }
 }
 
 startServer();
+
 
 
 
