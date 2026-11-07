@@ -4,34 +4,28 @@ import { env } from './config/env';
 import statusRouter from './routes/status';
 import hotelRouter from './routes/hotelRoutes';
 import authRouter from './routes/authRoutes';
+import bookingRouter from './routes/bookingRoutes';
 import { runMigrations } from './services/tableService';
 import { seedDatabase } from './services/seedService';
 import { notFound, errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
-//render forwards requests through its own server. so trust it to pass on the visitor's
+// Render forwards requests through its own server, so trust it to pass on the visitor's real address
 app.set('trust proxy', 1);
 
 app.use(cors({ origin: env.clientOrigin }));
-
 app.use(express.json({ limit: '50kb' }));
 
 app.use('/api', statusRouter);
-
-app.use('/api/auth', authRouter)
-
+app.use('/api/auth', authRouter);
 app.use('/api/hotels', hotelRouter);
+app.use('/api/bookings', bookingRouter);
 
 app.use(notFound);
-
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
-
-
-
-export async function startServer() {
+async function startServer() {
     try {
         console.log('Setting up database tables...');
         await runMigrations();
@@ -49,7 +43,3 @@ export async function startServer() {
 }
 
 startServer();
-
-
-
-
