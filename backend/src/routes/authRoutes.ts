@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { login, register } from '../controllers/authController';
+import { login, register } from '../controllers/authControllers';
 
 const router = Router();
 
