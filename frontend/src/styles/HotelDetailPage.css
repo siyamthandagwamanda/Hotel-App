@@ -411,3 +411,12 @@
     height: clamp(320px, 52vh, 560px);
   }
 }
+
+.detail-promo {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
+  background: #dff3e4;
+  color: #1c6b34;
+  font-weight: 700;
+}
