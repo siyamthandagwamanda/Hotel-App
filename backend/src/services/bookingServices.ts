@@ -7,6 +7,11 @@ const HOLD_MINUTES = 15;
 const MAX_NIGHTS = 30;
 const MAX_ROOMS = 5;
 
+//Loyalty promo: after 5 paid trips, every new booking gets 10% off
+
+export const LOYALTY_TRIPS = 5;
+export const LOYALTY_PERCENT = 10;
+
 export interface BookingInput {
   roomTypeId: number;
   checkIn: string;
@@ -24,6 +29,7 @@ export interface Booking {
   adults: number;
   children: number;
   totalCents: number;
+  discountCents: number;
   currency: string;
   holdExpiresAt: string | null;
   hotelId: number;
@@ -76,9 +82,9 @@ export function parseBookingInput(body: Record<string, unknown>): BookingInput {
   };
 }
 
-//Database helpers
 
-// Runs work as one all-or-nothing step: if anything throws, nothing is saved
+
+
 async function inTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   try {
@@ -94,7 +100,6 @@ async function inTransaction<T>(work: (client: PoolClient) => Promise<T>): Promi
   }
 }
 
-// Gives the booked rooms back to the calendar for every night of the stay
 async function returnRooms(client: PoolClient, bookingId: number): Promise<void> {
   await client.query(
     `UPDATE rooms_inventory ri
@@ -107,7 +112,6 @@ async function returnRooms(client: PoolClient, bookingId: number): Promise<void>
   );
 }
 
-//Holds that were never paid go back on sale. Called before any booking or payment step.
 export async function releaseExpiredHolds(): Promise<void> {
   await inTransaction(async (client) => {
     const expired = await client.query<{ id: number }>(
@@ -126,7 +130,7 @@ const BOOKING_SELECT = `
          to_char(b.check_in, 'YYYY-MM-DD') AS "checkIn",
          to_char(b.check_out, 'YYYY-MM-DD') AS "checkOut",
          b.adults, b.children,
-         b.total_amount_cents AS "totalCents", b.currency,
+         b.total_amount_cents AS "totalCents", b.discount_cents AS "discountCents", b.currency,
          b.hold_expires_at AS "holdExpiresAt",
          h.id::int AS "hotelId", h.name AS "hotelName", h.city AS "hotelCity",
          (SELECT url FROM hotel_images WHERE hotel_id = h.id ORDER BY position LIMIT 1) AS "hotelImage",
@@ -136,7 +140,27 @@ const BOOKING_SELECT = `
   FROM bookings b
   JOIN hotels h ON h.id = b.hotel_id`;
 
+// Paid trips are the ones that count towards the promo
+async function countPaidTrips(client: PoolClient | typeof pool, userId: number): Promise<number> {
+  const result = await client.query<{ trips: number }>(
+    `SELECT COUNT(*)::int AS trips FROM bookings
+     WHERE user_id = $1 AND status IN ('paid_pending_approval', 'confirmed', 'completed')`,
+    [userId],
+  );
+  return result.rows[0].trips;
+}
 
+export async function getLoyalty(userId: number) {
+  const trips = await countPaidTrips(pool, userId);
+  return {
+    trips: trips,
+    tripsNeeded: LOYALTY_TRIPS,
+    percent: LOYALTY_PERCENT,
+    unlocked: trips >= LOYALTY_TRIPS,
+  };
+}
+
+//Booking steps
 
 export async function createBooking(userId: number, input: BookingInput): Promise<Booking> {
   await releaseExpiredHolds();
@@ -159,7 +183,6 @@ export async function createBooking(userId: number, input: BookingInput): Promis
       throw new HttpError(400, 'TOO_MANY_GUESTS', 'That many guests do not fit in the rooms chosen.');
     }
 
-// FOR UPDATE makes a second visitor wait here until this booking is saved
     const nightRows = await client.query<{ units: number; price: number }>(
       `SELECT units_available AS units,
               COALESCE(price_override_cents, $4) AS price
@@ -182,18 +205,21 @@ export async function createBooking(userId: number, input: BookingInput): Promis
     );
 
     const perRoomTotal = nightRows.rows.reduce((sum, night) => sum + night.price, 0);
-    const totalCents = perRoomTotal * input.rooms;
-    const nightlyAverage = Math.round(perRoomTotal / nights);
+    const fullPriceCents = perRoomTotal * input.rooms;
+    const paidTrips = await countPaidTrips(client, userId);
+    const discountCents = paidTrips >= LOYALTY_TRIPS ? Math.round(fullPriceCents * LOYALTY_PERCENT / 100) : 0;
+    const totalCents = fullPriceCents - discountCents;
+    const nightlyAverage = Math.round(perRoomTotal / nights); // full price per night, before any promo
     const newReference = 'SC-' + randomBytes(4).toString('hex').toUpperCase();
 
     const bookingResult = await client.query<{ id: number }>(
       `INSERT INTO bookings
          (reference, user_id, hotel_id, check_in, check_out, adults, children,
-          total_amount_cents, hold_expires_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now() + make_interval(mins => $9))
+          total_amount_cents, discount_cents, hold_expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now() + make_interval(mins => $10))
        RETURNING id::int AS id`,
       [newReference, userId, room.hotel_id, input.checkIn, input.checkOut,
-       input.adults, input.children, totalCents, HOLD_MINUTES],
+       input.adults, input.children, totalCents, discountCents, HOLD_MINUTES],
     );
 
     await client.query(

@@ -79,6 +79,14 @@ export async function createTables(client: PoolClient): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
 
+    CREATE TABLE IF NOT EXISTS hotel_images (
+      id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      hotel_id BIGINT NOT NULL REFERENCES hotels(id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      alt_text TEXT,
+      position INTEGER NOT NULL DEFAULT 0
+    );
+
     CREATE TABLE IF NOT EXISTS amenities (
       id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
@@ -135,6 +143,8 @@ export async function createTables(client: PoolClient): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       CHECK (check_out > check_in)
     );
+
+    ALTER TABLE bookings ADD COLUMN IF NOT EXISTS discount_cents INTEGER NOT NULL DEFAULT 0;
 
     CREATE TABLE IF NOT EXISTS booking_items (
       id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
