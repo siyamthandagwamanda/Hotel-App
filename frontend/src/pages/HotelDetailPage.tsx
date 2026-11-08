@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { toggleFavourite } from '../slices/favouriteSlice';
-import { fetchHotelDetail, fetchHotelRooms, fetchHotelReviews, clearDetail, } from '../slices/hotelDetailSlices';
+import { loadLoyalty, reserveRoom } from '../slices/bookingSlice';
+import { fetchHotelDetail, fetchHotelRooms, fetchHotelReviews, clearDetail,} from '../slices/hotelDetailSlices';
 import SearchSheet from '../components/shared/SearchSheet';
 import Gallery from '../components/shared/Gallery';
 import RoomList from '../components/shared/RoomList';
@@ -37,7 +38,7 @@ export function HotelDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  //hotel id comes from the address, /hotels/3
+  // The hotel id comes from the address, for example /hotels/3
   const idNumber = Number(params.id);
   const hotelId = Number.isInteger(idNumber) && idNumber > 0 ? idNumber : null;
 
@@ -45,6 +46,8 @@ export function HotelDetailPage() {
   const user = useAppSelector((state) => state.auth.user);
   const savedIds = useAppSelector((state) => state.favourites.hotelIds);
   const detail = useAppSelector((state) => state.hotelDetail);
+  const loyalty = useAppSelector((state) => state.booking.loyalty);
+  const reserving = useAppSelector((state) => state.booking.status === 'loading');
 
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -63,6 +66,13 @@ export function HotelDetailPage() {
       dispatch(clearDetail());
     };
   }, [dispatch, hotelId]);
+
+  // Signed-in guests see their loyalty promo in the booking card
+  useEffect(() => {
+    if (user !== null) {
+      dispatch(loadLoyalty());
+    }
+  }, [dispatch, user]);
 
   // Load the rooms again whenever the dates or guests change.
   useEffect(() => {
@@ -146,13 +156,19 @@ export function HotelDetailPage() {
   const chosenRoom = pickedRoom !== undefined ? pickedRoom : bestRoom;
   const chosenIsBest = chosenRoom !== undefined && chosenRoom.id === detail.bestRoomId;
 
-  let buttonLabel = user === null ? 'Register to reserve' : 'Reserve';
+  let buttonLabel = user === null ? 'Sign in to reserve' : 'Reserve';
   if (!hasDates) {
     buttonLabel = 'Choose dates';
   }
 
-  function handleReserve() {
-    if (!hasDates) {
+  // Promo: after enough paid trips, the server takes a percentage off. We show the same sum here.
+  const promoCents =
+    loyalty !== null && loyalty.unlocked && chosenRoom !== undefined && chosenRoom.totalCents !== null
+      ? Math.round((chosenRoom.totalCents * loyalty.percent) / 100)
+      : 0;
+
+  async function handleReserve() {
+    if (!hasDates || search.checkIn === null || search.checkOut === null) {
       setSearchOpen(true);
       return;
     }
@@ -160,7 +176,29 @@ export function HotelDetailPage() {
       setNote('Pick a room first.');
       return;
     }
-    setNote('Booking opens in the next step of the build.');
+    // Browsing is open to everyone; signing in is only needed to book
+    if (user === null) {
+      navigate('/signin', { state: { from: location.pathname } });
+      return;
+    }
+
+    setNote('');
+    const result = await dispatch(
+      reserveRoom({
+        roomTypeId: chosenRoom.id,
+        checkIn: search.checkIn,
+        checkOut: search.checkOut,
+        adults: search.guests.adults,
+        children: search.guests.children,
+        rooms: search.guests.rooms,
+      }),
+    );
+
+    if (reserveRoom.fulfilled.match(result)) {
+      navigate('/bookings/' + result.payload.reference);
+    } else {
+      setNote(result.error.message ?? 'We could not reserve that room. Please try again.');
+    }
   }
 
   const boxLeft = hotel.longitude - 0.01;
@@ -341,16 +379,29 @@ export function HotelDetailPage() {
                   {detail.nights === 1 ? 'night' : 'nights'}, taxes included
                 </p>
               )}
+              {promoCents > 0 && chosenRoom.totalCents !== null && loyalty !== null && (
+                <p className="detail-promo">
+                  {loyalty.percent}% loyalty discount −{formatRand(promoCents)}
+                  <br />
+                  You pay {formatRand(chosenRoom.totalCents - promoCents)}
+                </p>
+              )}
+              {loyalty !== null && !loyalty.unlocked && (
+                <p className="detail-muted">
+                  {loyalty.tripsNeeded - loyalty.trips} more paid {loyalty.tripsNeeded - loyalty.trips === 1 ? 'trip' : 'trips'} to
+                  unlock {loyalty.percent}% off.
+                </p>
+              )}
             </>
           )}
 
           <button
             type="button"
             className="detail-button detail-button-action"
-            disabled={chosenRoom === undefined && hasDates}
+            disabled={(chosenRoom === undefined && hasDates) || reserving}
             onClick={handleReserve}
           >
-            {buttonLabel}
+            {reserving ? 'Reserving...' : buttonLabel}
           </button>
           {note !== '' && <p className="detail-note" role="status">{note}</p>}
         </aside>
