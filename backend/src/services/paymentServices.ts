@@ -2,8 +2,8 @@ import { randomBytes } from 'node:crypto';
 import { pool } from '../config/pool';
 import { env } from '../config/env';
 import { HttpError } from '../middleware/errorHandler';
-import { getBooking, releaseExpiredHolds } from './bookingServices';
-import type { Booking } from './bookingServices';
+import { getBooking, releaseExpiredHolds } from './bookingService';
+import type { Booking } from './bookingService';
 
 const PAYSTACK_URL = 'https://api.paystack.co';
 const PAYMENT_WINDOW_MINUTES = 30;
@@ -15,29 +15,34 @@ interface PaystackReply {
 }
 
 
-export async function callPaystack(path: string, body?: object): Promise<PaystackReply['data']> {
-  if (env.paystackSecret === '') {
+async function callPaystack(path: string, body?: object): Promise<PaystackReply['data']> {
+  if (env.paystackSecretKey === '') {
     throw new HttpError(503, 'PAYMENTS_UNAVAILABLE', 'Payments are not available right now.');
   }
 
-  const response = await fetch(`${PAYSTACK_URL}${path}`, {
-    method: body === undefined ? 'GET' : 'POST',
-    headers: {
-      Authorization: `Bearer ${env.paystackSecret}`,
-      'Content-Type': 'application/json',
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  try {
+    const response = await fetch(`${PAYSTACK_URL}${path}`, {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: {
+        Authorization: `Bearer ${env.paystackSecretKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
 
-  const reply = (await response.json()) as PaystackReply;
-  if (!response.ok || !reply.status) {
-    console.log('Paystack error:', reply.message);
+    const reply = (await response.json()) as PaystackReply;
+    if (!response.ok || !reply.status) {
+      console.log('Paystack error:', reply.message);
+      throw new Error(reply.message);
+    }
+    return reply.data;
+  } catch (error) {
+    console.log('Could not use Paystack:', error);
     throw new HttpError(502, 'PAYMENT_PROVIDER_ERROR', 'The payment service did not respond. Please try again.');
   }
-  return reply.data;
 }
 
-
+//ask Paystack for a checkout page. The visitor pays there, so no card details touch our app.
 export async function startPayment(userId: number, reference: string): Promise<string> {
   await releaseExpiredHolds();
   const booking = await getBooking(userId, reference);
@@ -47,7 +52,7 @@ export async function startPayment(userId: number, reference: string): Promise<s
 
   const user = await pool.query<{ email: string }>('SELECT email FROM users WHERE id = $1', [userId]);
 
-
+  // Paystack refuses a reference it has seen before, so each attempt gets its own
   const paymentReference = `${reference}-${randomBytes(3).toString('hex')}`;
 
   const data = await callPaystack('/transaction/initialize', {
@@ -63,7 +68,7 @@ export async function startPayment(userId: number, reference: string): Promise<s
      SELECT id, 'paystack', $2, total_amount_cents FROM bookings WHERE reference = $1`,
     [reference, paymentReference],
   );
-
+  // Keep the rooms held while the visitor is on the payment page
   await pool.query(
     `UPDATE bookings SET hold_expires_at = now() + make_interval(mins => $2) WHERE reference = $1`,
     [reference, PAYMENT_WINDOW_MINUTES],
@@ -72,7 +77,7 @@ export async function startPayment(userId: number, reference: string): Promise<s
   return data.authorization_url as string;
 }
 
-
+// when the visitor comes back, ask Paystack whether the payment went through
 export async function verifyPayment(userId: number, reference: string): Promise<Booking> {
   const booking = await getBooking(userId, reference);
   if (booking.status !== 'held') {
@@ -92,7 +97,7 @@ export async function verifyPayment(userId: number, reference: string): Promise<
 
     if (data.status === 'success' && data.amount === booking.totalCents && data.currency === booking.currency) {
       await pool.query(`UPDATE payments SET status = 'paid', paid_at = now() WHERE id = $1`, [attempt.id]);
- 
+// Paid bookings wait for the hotel team to approve them
       await pool.query(
         `UPDATE bookings SET status = 'paid_pending_approval', hold_expires_at = NULL
          WHERE reference = $1 AND status = 'held'`,
