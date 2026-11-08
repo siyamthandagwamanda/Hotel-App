@@ -1,0 +1,27 @@
+/* Top bar used on the booking and trips pages */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--page-pad);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-bg);
+}
+
+.page-header-logo {
+  text-decoration: none;
+}
+
+.page-header-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.page-header-link {
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
