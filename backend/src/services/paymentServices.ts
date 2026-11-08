@@ -2,8 +2,8 @@ import { randomBytes } from 'node:crypto';
 import { pool } from '../config/pool';
 import { env } from '../config/env';
 import { HttpError } from '../middleware/errorHandler';
-import { getBooking, releaseExpiredHolds } from './bookingService';
-import type { Booking } from './bookingService';
+import { getBooking, releaseExpiredHolds } from './bookingServices';
+import type { Booking } from './bookingServices';
 
 const PAYSTACK_URL = 'https://api.paystack.co';
 const PAYMENT_WINDOW_MINUTES = 30;
@@ -16,7 +16,7 @@ interface PaystackReply {
 
 
 async function callPaystack(path: string, body?: object): Promise<PaystackReply['data']> {
-  if (env.paystackSecretKey === '') {
+  if (env.paystackSecret === '') {
     throw new HttpError(503, 'PAYMENTS_UNAVAILABLE', 'Payments are not available right now.');
   }
 
@@ -24,7 +24,7 @@ async function callPaystack(path: string, body?: object): Promise<PaystackReply[
     const response = await fetch(`${PAYSTACK_URL}${path}`, {
       method: body === undefined ? 'GET' : 'POST',
       headers: {
-        Authorization: `Bearer ${env.paystackSecretKey}`,
+        Authorization: `Bearer ${env.paystackSecret}`,
         'Content-Type': 'application/json',
       },
       body: body === undefined ? undefined : JSON.stringify(body),
