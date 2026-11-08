@@ -5,10 +5,7 @@ import journeyReducer from './slices/journeySlice';
 import hotelReducer from './slices/hotelSlices';
 import  favouriteReducer from './slices/favouriteSlice';
 import hotelDetailReducer from './slices/hotelDetailSlices';
-<<<<<<< HEAD
-=======
 import bookingReducer from './slices/bookingSlice';
->>>>>>> feat/redux-store
 
 
 export const store = configureStore({
@@ -19,10 +16,7 @@ export const store = configureStore({
         hotels: hotelReducer,
         favourites: favouriteReducer,
         hotelDetail: hotelDetailReducer,
-<<<<<<< HEAD
-=======
         booking: bookingReducer,
->>>>>>> feat/redux-store
     },
 });
 
