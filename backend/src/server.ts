@@ -14,7 +14,7 @@ const app = express();
 // Render forwards requests through its own server, so trust it to pass on the visitor's real address
 app.set('trust proxy', 1);
 
-app.use(cors({ origin: env.clientOrigin }));
+app.use(cors({}));
 app.use(express.json({ limit: '50kb' }));
 
 app.use('/api', statusRouter);
