@@ -4,6 +4,7 @@ import { HotelDetailPage } from './pages/HotelDetailPage'
 import { AuthPage } from './pages/AuthPage'
 import { BookingPage } from './pages/BookingPage'
 import { TripsPage } from './pages/TripsPage'
+import { AdminPage } from './pages/AdminPage'
 import { RequireAuth } from './components/shared/RequireAuth'
 
 export function App(){
@@ -14,6 +15,7 @@ export function App(){
       <Route path="/hotels/:id" element={ <HotelDetailPage/> } />
       <Route path="/signin" element={ <AuthPage key="signin" mode="signin" /> } />
       <Route path="/register" element={ <AuthPage key="register" mode="register" /> } />
+      <Route path="/admin" element={ <RequireAuth role="admin"><AdminPage /></RequireAuth> } />
       <Route path="/trips" element={ <RequireAuth><TripsPage /></RequireAuth> } />
       <Route path="/bookings/:reference" element={ <RequireAuth><BookingPage /></RequireAuth> } />
     </Routes>

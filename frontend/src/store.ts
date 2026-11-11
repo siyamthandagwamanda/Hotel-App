@@ -6,6 +6,7 @@ import hotelReducer from './slices/hotelSlices';
 import  favouriteReducer from './slices/favouriteSlice';
 import hotelDetailReducer from './slices/hotelDetailSlices';
 import bookingReducer from './slices/bookingSlice';
+import adminReducer from './slices/adminSlice';
 
 
 export const store = configureStore({
@@ -17,6 +18,7 @@ export const store = configureStore({
         favourites: favouriteReducer,
         hotelDetail: hotelDetailReducer,
         booking: bookingReducer,
+        admin: adminReducer,
     },
 });
 
