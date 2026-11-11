@@ -1,20 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-import { login, register } from '../controllers/authControllers';
-=======
-<<<<<<< Updated upstream
-import { login, register } from '../controllers/authController';
-=======
 import { requireAuth } from '../middleware/auth';
 import { editProfile, login, register } from '../controllers/authControllers';
->>>>>>> Stashed changes
->>>>>>> back/routes
-=======
-import { requireAuth } from '../middleware/auth';
-import { editProfile, login, register } from '../controllers/authControllers';
->>>>>>> Stashed changes
 
 const router = Router();
 
