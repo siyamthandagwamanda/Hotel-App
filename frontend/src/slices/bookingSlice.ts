@@ -1,8 +1,6 @@
 import { createAsyncThunk, createSlice, isFulfilled, isPending, isRejected } from '@reduxjs/toolkit';
-import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
-import type { RootState } from '../store';
-import { ApiError, apiRequest } from '../utils/apiRequest';
 import { signOut } from './authSlice';
+import { callAsUser } from './callAsUser';
 
 export interface BookedRoom {
   roomName: string;
@@ -58,24 +56,6 @@ const initialState: BookingState = {
   status: 'idle',
   error: null,
 };
-
-interface ThunkTools {
-  getState: () => unknown;
-  dispatch: ThunkDispatch<unknown, unknown, UnknownAction>;
-}
-
-// Calls the API as the signed-in visitor. A 401 means the token has expired, so sign them out.
-async function callAsUser<T>(tools: ThunkTools, path: string, method: 'GET' | 'POST' = 'GET', body?: object): Promise<T> {
-  const token = (tools.getState() as RootState).auth.token;
-  try {
-    return await apiRequest<T>(path, token, method, body);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) {
-      tools.dispatch(signOut());
-    }
-    throw error;
-  }
-}
 
 export const reserveRoom = createAsyncThunk('booking/reserve', async (args: ReserveArgs, tools) => {
   const data = await callAsUser<{ booking: Booking }>(tools, '/bookings', 'POST', args);
