@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react';
 import PageHeader from '../components/shared/PageHeader';
 import ReservationsPanel from '../components/admin/ReservationsPanel';
-<<<<<<< HEAD:frontend/src/pages/AdminPage.tsx
-import {HotelsPanel} from '../components/admin/HotelPanel';
-=======
-import HotelsPanel from '../components/admin/HotelsPanel';
->>>>>>> pages/all-pages:frontend/src/pages/AdminPage.ts
+import HotelsPanel from '../components/admin/HotelPanel';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
 import { clearAdminMessages } from '../slices/adminSlice';
 import '../styles/BookingPage.css';
