@@ -3,13 +3,12 @@ import type { RootState } from '../store';
 import { ApiError, apiRequest } from '../utils/apiRequest';
 import { signOut } from './authSlice';
 
-// The parts of a thunk that we need: reading the token and dispatching
 interface ThunkTools {
   getState: () => unknown;
   dispatch: ThunkDispatch<unknown, unknown, UnknownAction>;
 }
 
-// Calls the API as the signed-in visitor. A 401 means the token has expired, so sign them out.
+
 export async function callAsUser<T>(
   tools: ThunkTools,
   path: string,
