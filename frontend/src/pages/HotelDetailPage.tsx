@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/storeHooks';
-import { toggleFavourite } from '../slices/favouriteSlice';
+import { useFavourites } from '../hooks/useFavourites';
 import { loadLoyalty, reserveRoom } from '../slices/bookingSlice';
-import { fetchHotelDetail, fetchHotelRooms, fetchHotelReviews, clearDetail,} from '../slices/hotelDetailSlices';
+import {
+  fetchHotelDetail,
+  fetchHotelRooms,
+  fetchHotelReviews,
+  clearDetail,
+} from '../slices/hotelDetailSlices';
 import SearchSheet from '../components/shared/SearchSheet';
 import Gallery from '../components/shared/Gallery';
 import RoomList from '../components/shared/RoomList';
+import ReviewForm from '../components/shared/ReviewForm';
 import { formatRand, formatShortDate } from '../utils/formatUtils';
 import '../styles/HotelDetailPage.css';
 
@@ -44,7 +50,7 @@ export function HotelDetailPage() {
 
   const search = useAppSelector((state) => state.search);
   const user = useAppSelector((state) => state.auth.user);
-  const savedIds = useAppSelector((state) => state.favourites.hotelIds);
+  const { savedIds, toggle: toggleSaved } = useFavourites();
   const detail = useAppSelector((state) => state.hotelDetail);
   const loyalty = useAppSelector((state) => state.booking.loyalty);
   const reserving = useAppSelector((state) => state.booking.status === 'loading');
@@ -167,12 +173,15 @@ export function HotelDetailPage() {
       ? Math.round((chosenRoom.totalCents * loyalty.percent) / 100)
       : 0;
 
-  async function handleReserve() {
+  // Reserves the room with this id, or the chosen room when no id is given
+  async function handleReserve(roomId?: number) {
+    const room = roomId === undefined ? chosenRoom : detail.rooms.find((option) => option.id === roomId);
+
     if (!hasDates || search.checkIn === null || search.checkOut === null) {
       setSearchOpen(true);
       return;
     }
-    if (chosenRoom === undefined) {
+    if (room === undefined) {
       setNote('Pick a room first.');
       return;
     }
@@ -185,7 +194,7 @@ export function HotelDetailPage() {
     setNote('');
     const result = await dispatch(
       reserveRoom({
-        roomTypeId: chosenRoom.id,
+        roomTypeId: room.id,
         checkIn: search.checkIn,
         checkOut: search.checkOut,
         adults: search.guests.adults,
@@ -230,7 +239,7 @@ export function HotelDetailPage() {
               type="button"
               className="detail-link"
               aria-pressed={saved}
-              onClick={() => dispatch(toggleFavourite(hotel.id))}
+              onClick={() => toggleSaved(hotel.id)}
             >
               {saved ? 'Saved' : 'Save'}
             </button>
@@ -298,7 +307,10 @@ export function HotelDetailPage() {
               nights={detail.nights}
               chosenRoomId={chosenRoom === undefined ? null : chosenRoom.id}
               onSelect={setSelectedRoomId}
+              canReserve={hasDates}
+              onReserve={handleReserve}
             />
+            {note !== '' && <p className="detail-note" role="status">{note}</p>}
           </section>
 
           <section id="facilities" className="detail-section">
@@ -325,8 +337,9 @@ export function HotelDetailPage() {
           <section id="reviews" className="detail-section">
             <h2 className="detail-heading">Reviews</h2>
             {detail.reviews.length === 0 && (
-              <p className="detail-muted">No reviews yet. Guests can review after their stay.</p>
+              <p className="detail-muted">No reviews yet. Guests with a confirmed booking can leave one.</p>
             )}
+            {hotelId !== null && <ReviewForm hotelId={hotelId} />}
             <ul className="detail-reviews">
               {detail.reviews.map((review) => (
                 <li className="detail-review" key={review.id}>
@@ -399,7 +412,7 @@ export function HotelDetailPage() {
             type="button"
             className="detail-button detail-button-action"
             disabled={(chosenRoom === undefined && hasDates) || reserving}
-            onClick={handleReserve}
+            onClick={() => handleReserve()}
           >
             {reserving ? 'Reserving...' : buttonLabel}
           </button>
