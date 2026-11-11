@@ -141,6 +141,19 @@ export async function getUserById(userId: number): Promise<PublicUser> {
   return toPublicUser(result.rows[0]);
 }
 
+// Lets a signed-in guest change their name and phone number
+export async function updateProfile(userId: number, name: string, phone: string | null): Promise<PublicUser> {
+  if (name.length < 1 || name.length > 80) {
+    throw new HttpError(400, 'INVALID_NAME', 'Enter your name (up to 80 characters).');
+  }
+  if (phone !== null && !/^[0-9+() -]{7,20}$/.test(phone)) {
+    throw new HttpError(400, 'INVALID_PHONE', 'Enter a valid phone number, or leave it empty.');
+  }
+
+  await pool.query('UPDATE users SET name = $2, phone = $3 WHERE id = $1', [userId, name, phone]);
+  return getUserById(userId);
+}
+
 export function verifyToken(token: string): { userId: number; role: Role } {
   try {
     const payload = jwt.verify(token, env.jwtSecret);

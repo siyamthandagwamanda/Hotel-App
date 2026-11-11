@@ -7,8 +7,7 @@ const HOLD_MINUTES = 15;
 const MAX_NIGHTS = 30;
 const MAX_ROOMS = 5;
 
-//Loyalty promo: after 5 paid trips, every new booking gets 10% off
-
+// Loyalty promo: after 5 paid trips, every new booking gets 10% off
 export const LOYALTY_TRIPS = 5;
 export const LOYALTY_PERCENT = 10;
 
@@ -39,7 +38,7 @@ export interface Booking {
   rooms: { roomName: string; quantity: number }[];
 }
 
-//Reading and checking what the visitor sent
+// ---------- Reading and checking what the visitor sent ----------
 
 function readWholeNumber(value: unknown, name: string, min: number, max: number): number {
   if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) {
@@ -59,7 +58,8 @@ export function countNights(checkIn: string, checkOut: string): number {
   return Math.round((Date.parse(checkOut) - Date.parse(checkIn)) / 86400000);
 }
 
-export function parseBookingInput(body: Record<string, unknown>): BookingInput {
+// Checks the two dates of a stay, for new bookings and for admin changes
+export function parseStayDates(body: Record<string, unknown>): { checkIn: string; checkOut: string } {
   const checkIn = readDate(body.checkIn, 'Check-in');
   const checkOut = readDate(body.checkOut, 'Check-out');
   const today = new Date().toISOString().slice(0, 10);
@@ -71,21 +71,26 @@ export function parseBookingInput(body: Record<string, unknown>): BookingInput {
   if (nights < 1 || nights > MAX_NIGHTS) {
     throw new HttpError(400, 'INVALID_BOOKING', `Stay between 1 and ${MAX_NIGHTS} nights.`);
   }
+  return { checkIn: checkIn, checkOut: checkOut };
+}
+
+export function parseBookingInput(body: Record<string, unknown>): BookingInput {
+  const stay = parseStayDates(body);
 
   return {
     roomTypeId: readWholeNumber(body.roomTypeId, 'Room', 1, 2147483647),
-    checkIn: checkIn,
-    checkOut: checkOut,
+    checkIn: stay.checkIn,
+    checkOut: stay.checkOut,
     adults: readWholeNumber(body.adults, 'Adults', 1, 20),
     children: readWholeNumber(body.children, 'Children', 0, 20),
     rooms: readWholeNumber(body.rooms, 'Rooms', 1, MAX_ROOMS),
   };
 }
 
+// ---------- Database helpers ----------
 
-
-
-async function inTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
+// Runs work as one all-or-nothing step: if anything throws, nothing is saved
+export async function inTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -100,7 +105,8 @@ async function inTransaction<T>(work: (client: PoolClient) => Promise<T>): Promi
   }
 }
 
-async function returnRooms(client: PoolClient, bookingId: number): Promise<void> {
+// Gives the booked rooms back to the calendar for every night of the stay
+export async function returnRooms(client: PoolClient, bookingId: number): Promise<void> {
   await client.query(
     `UPDATE rooms_inventory ri
      SET units_available = ri.units_available + bi.quantity
@@ -112,6 +118,7 @@ async function returnRooms(client: PoolClient, bookingId: number): Promise<void>
   );
 }
 
+// Holds that were never paid go back on sale. Called before any booking or payment step.
 export async function releaseExpiredHolds(): Promise<void> {
   await inTransaction(async (client) => {
     const expired = await client.query<{ id: number }>(
@@ -125,8 +132,8 @@ export async function releaseExpiredHolds(): Promise<void> {
   });
 }
 
-const BOOKING_SELECT = `
-  SELECT b.reference, b.status,
+export const BOOKING_COLUMNS = `
+         b.reference, b.status,
          to_char(b.check_in, 'YYYY-MM-DD') AS "checkIn",
          to_char(b.check_out, 'YYYY-MM-DD') AS "checkOut",
          b.adults, b.children,
@@ -136,9 +143,11 @@ const BOOKING_SELECT = `
          (SELECT url FROM hotel_images WHERE hotel_id = h.id ORDER BY position LIMIT 1) AS "hotelImage",
          (SELECT json_agg(json_build_object('roomName', rt.name, 'quantity', bi.quantity))
             FROM booking_items bi JOIN room_types rt ON rt.id = bi.room_type_id
-           WHERE bi.booking_id = b.id) AS rooms
-  FROM bookings b
-  JOIN hotels h ON h.id = b.hotel_id`;
+           WHERE bi.booking_id = b.id) AS rooms`;
+
+export const BOOKING_FROM = `FROM bookings b JOIN hotels h ON h.id = b.hotel_id`;
+
+const BOOKING_SELECT = `SELECT ${BOOKING_COLUMNS} ${BOOKING_FROM}`;
 
 // Paid trips are the ones that count towards the promo
 async function countPaidTrips(client: PoolClient | typeof pool, userId: number): Promise<number> {
@@ -150,6 +159,7 @@ async function countPaidTrips(client: PoolClient | typeof pool, userId: number):
   return result.rows[0].trips;
 }
 
+// Tells the booking panel whether this guest gets the promo
 export async function getLoyalty(userId: number) {
   const trips = await countPaidTrips(pool, userId);
   return {
@@ -160,7 +170,44 @@ export async function getLoyalty(userId: number) {
   };
 }
 
-//Booking steps
+// Locks the nights, checks there are enough rooms and takes them off the calendar.
+// Returns what one room costs for the whole stay. Used for new bookings and admin date changes.
+export async function takeRooms(
+  client: PoolClient,
+  roomTypeId: number,
+  checkIn: string,
+  checkOut: string,
+  rooms: number,
+  basePriceCents: number,
+): Promise<number> {
+  const nights = countNights(checkIn, checkOut);
+
+  // FOR UPDATE makes a second visitor wait here until this booking is saved
+  const nightRows = await client.query<{ units: number; price: number }>(
+    `SELECT units_available AS units,
+            COALESCE(price_override_cents, $4) AS price
+     FROM rooms_inventory
+     WHERE room_type_id = $1 AND stay_date >= $2::date AND stay_date < $3::date
+     FOR UPDATE`,
+    [roomTypeId, checkIn, checkOut, basePriceCents],
+  );
+
+  const allNightsOnSale = nightRows.rows.length === nights;
+  const enoughRooms = nightRows.rows.every((night) => night.units >= rooms);
+  if (!allNightsOnSale || !enoughRooms) {
+    throw new HttpError(409, 'NOT_AVAILABLE', 'Those rooms are no longer available for these dates.');
+  }
+
+  await client.query(
+    `UPDATE rooms_inventory SET units_available = units_available - $4
+     WHERE room_type_id = $1 AND stay_date >= $2::date AND stay_date < $3::date`,
+    [roomTypeId, checkIn, checkOut, rooms],
+  );
+
+  return nightRows.rows.reduce((sum, night) => sum + night.price, 0);
+}
+
+// ---------- Booking steps ----------
 
 export async function createBooking(userId: number, input: BookingInput): Promise<Booking> {
   await releaseExpiredHolds();
@@ -183,28 +230,7 @@ export async function createBooking(userId: number, input: BookingInput): Promis
       throw new HttpError(400, 'TOO_MANY_GUESTS', 'That many guests do not fit in the rooms chosen.');
     }
 
-    const nightRows = await client.query<{ units: number; price: number }>(
-      `SELECT units_available AS units,
-              COALESCE(price_override_cents, $4) AS price
-       FROM rooms_inventory
-       WHERE room_type_id = $1 AND stay_date >= $2::date AND stay_date < $3::date
-       FOR UPDATE`,
-      [input.roomTypeId, input.checkIn, input.checkOut, room.base_price_cents],
-    );
-
-    const allNightsOnSale = nightRows.rows.length === nights;
-    const enoughRooms = nightRows.rows.every((night) => night.units >= input.rooms);
-    if (!allNightsOnSale || !enoughRooms) {
-      throw new HttpError(409, 'NOT_AVAILABLE', 'Those rooms are no longer available for these dates.');
-    }
-
-    await client.query(
-      `UPDATE rooms_inventory SET units_available = units_available - $4
-       WHERE room_type_id = $1 AND stay_date >= $2::date AND stay_date < $3::date`,
-      [input.roomTypeId, input.checkIn, input.checkOut, input.rooms],
-    );
-
-    const perRoomTotal = nightRows.rows.reduce((sum, night) => sum + night.price, 0);
+    const perRoomTotal = await takeRooms(client, input.roomTypeId, input.checkIn, input.checkOut, input.rooms, room.base_price_cents);
     const fullPriceCents = perRoomTotal * input.rooms;
     const paidTrips = await countPaidTrips(client, userId);
     const discountCents = paidTrips >= LOYALTY_TRIPS ? Math.round(fullPriceCents * LOYALTY_PERCENT / 100) : 0;
