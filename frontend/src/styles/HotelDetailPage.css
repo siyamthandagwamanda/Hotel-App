@@ -339,6 +339,14 @@
   background: var(--color-white);
 }
 
+.room-selectable {
+  cursor: pointer;
+}
+
+.room-selectable:hover {
+  border-color: var(--color-primary);
+}
+
 .room-chosen {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 1px var(--color-primary);
