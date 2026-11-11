@@ -24,12 +24,18 @@ export function RoomList({ rooms, nights, chosenRoomId, onSelect }: RoomListProp
     <ul className="rooms">
       {rooms.map((room) => {
         const soldOut = room.available === false;
-        const tooSmall = !room.fitsParty;
+        const tooSmall = !room.isValid;
         const chosen = room.id === chosenRoomId;
+        const canSelect = !soldOut && !tooSmall;
         const fewLeft = room.available === true && room.unitsLeft !== null && room.unitsLeft <= 3;
 
         return (
-          <li key={room.id} className={chosen ? 'room room-chosen' : 'room'}>
+          // Clicking anywhere on a room picks it. The Select button does the same for keyboard users.
+          <li
+            key={room.id}
+            className={'room' + (chosen ? ' room-chosen' : '') + (canSelect ? ' room-selectable' : '')}
+            onClick={canSelect ? () => onSelect(room.id) : undefined}
+          >
             <div className="room-main">
               <h3 className="room-name">{room.name}</h3>
               <p className="room-meta">{describeSleeps(room)}</p>
@@ -53,7 +59,7 @@ export function RoomList({ rooms, nights, chosenRoomId, onSelect }: RoomListProp
               <button
                 type="button"
                 className="detail-button"
-                disabled={soldOut || tooSmall}
+                disabled={!canSelect}
                 onClick={() => onSelect(room.id)}
               >
                 {chosen ? 'Selected' : 'Select'}
