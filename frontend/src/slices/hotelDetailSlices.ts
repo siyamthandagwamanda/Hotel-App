@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { HotelImage, Amenity } from './hotelSlices';
+import { submitReview } from './reviewSlice';
 
 export interface Policy {
   type: string;
@@ -170,6 +171,14 @@ const hotelDetailSlice = createSlice({
 
       .addCase(fetchHotelReviews.fulfilled, (state, action) => {
         state.reviews = action.payload;
+      })
+
+      // A new review shows up in the list and in the hotel's review count at once
+      .addCase(submitReview.fulfilled, (state, action) => {
+        state.reviews = action.payload;
+        if (state.hotel !== null) {
+          state.hotel.reviewCount += 1;
+        }
       });
   },
 });

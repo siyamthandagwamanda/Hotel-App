@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { apiRequest } from '../utils/apiRequest';
 
 export interface User {
   id: number;
@@ -91,6 +92,17 @@ export const signIn = createAsyncThunk('auth/signIn', async (args: SignInArgs) =
   return result;
 });
 
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (args: { name: string; phone: string }, { getState }) => {
+    const token = (getState() as { auth: AuthState }).auth.token;
+    const data = await apiRequest<{ user: User }>('/auth/profile', token, 'PATCH', args);
+    // Keep the saved sign-in in step, so a refresh shows the new details
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify({ token: token, user: data.user }));
+    return data.user;
+  },
+);
+
 export const signOut = createAsyncThunk('auth/signOut', async () => {
   window.localStorage.removeItem(SESSION_KEY);
 });
@@ -134,6 +146,9 @@ const authSlice = createSlice({
       .addCase(signIn.rejected, (state, action) => {
         state.status = 'error';
         state.error = action.error.message ?? 'Could not sign you in.';
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
       })
       .addCase(signOut.fulfilled, (state) => {
         state.user = null;
