@@ -1,0 +1,68 @@
+/* Review form on the hotel page */
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-white);
+}
+
+.review-title {
+  margin: 0;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.review-stars {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.review-star {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-line);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.review-star-on {
+  color: var(--color-action);
+}
+
+.review-text {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.review-error {
+  margin: 0;
+  color: #9a2a1c;
+}
+
+.review-submit {
+  min-height: 44px;
+  padding: 0 var(--space-6);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-action);
+  color: var(--color-white);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.review-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
