@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/server.ts",
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "make-admin": "tsx scripts/makeAdmin.ts"
   },
   "keywords": [],
   "author": "",
