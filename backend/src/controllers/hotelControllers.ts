@@ -4,6 +4,7 @@ import { searchHotels } from '../services/searchService';
 import { parseSearchQuery } from '../services/searchParams';
 import { HttpError } from '../middleware/errorHandler';
 import { getHotelReviews, getNextStayRooms, getNextStayDetail } from '../services/nextStayDetailService';
+import { addReview, getEligibility } from '../services/reviewService';
 
 function readHotelId(value: unknown): number {
   const id = Number(value);
@@ -51,4 +52,16 @@ export async function rooms(req: Request, res: Response): Promise<void> {
 
 export async function reviews(req: Request, res: Response): Promise<void> {
   res.json({ reviews: await getHotelReviews(readHotelId(req.params.id)) });
+}
+
+// Tells a signed-in guest whether they may review this hotel
+export async function reviewStatus(req: Request, res: Response): Promise<void> {
+  res.json(await getEligibility(req.auth!.userId, readHotelId(req.params.id)));
+}
+
+export async function postReview(req: Request, res: Response): Promise<void> {
+  const comment = typeof req.body.comment === 'string' && req.body.comment.trim() !== '' ? req.body.comment.trim() : null;
+
+  await addReview(req.auth!.userId, readHotelId(req.params.id), req.body.rating, comment);
+  res.status(201).json({ reviews: await getHotelReviews(readHotelId(req.params.id)) });
 }
