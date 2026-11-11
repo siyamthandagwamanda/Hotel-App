@@ -5,6 +5,8 @@ import statusRouter from './routes/status';
 import hotelRouter from './routes/hotelRoutes';
 import authRouter from './routes/authRoutes';
 import bookingRouter from './routes/bookingRoutes';
+import adminRouter from './routes/adminRoutes';
+import favouriteRouter from './routes/favouriteRoutes';
 import { runMigrations } from './services/tableService';
 import { seedDatabase } from './services/seedService';
 import { notFound, errorHandler } from './middleware/errorHandler';
@@ -21,6 +23,8 @@ app.use('/api', statusRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/hotels', hotelRouter);
 app.use('/api/bookings', bookingRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/favourites', favouriteRouter);
 
 app.use(notFound);
 app.use(errorHandler);
