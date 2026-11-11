@@ -36,7 +36,7 @@ export interface RoomOption {
   nightlyCents: number;
   totalCents: number | null;
   unitsLeft: number | null;
-  fitsParty: boolean;
+  isValid: boolean;
   available: boolean | null;
 }
 
