@@ -7,6 +7,7 @@ import  favouriteReducer from './slices/favouriteSlice';
 import hotelDetailReducer from './slices/hotelDetailSlices';
 import bookingReducer from './slices/bookingSlice';
 import adminReducer from './slices/adminSlice';
+//import reviewReducer from './slices/reviewSlice';
 
 
 export const store = configureStore({
@@ -19,6 +20,7 @@ export const store = configureStore({
         hotelDetail: hotelDetailReducer,
         booking: bookingReducer,
         admin: adminReducer,
+        //reviewForm: reviewReducer,
     },
 });
 
