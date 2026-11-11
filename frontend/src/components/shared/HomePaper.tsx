@@ -3,7 +3,11 @@ import type { TouchEvent, UIEvent } from 'react';
 import type { DeckPageData } from './../../utils/homePageUtils.js';
 import { useAppDispatch, useAppSelector } from '../../hooks/storeHooks';
 import { setCurrentPage } from '../../slices/journeySlice.js';
+<<<<<<< HEAD
 import { toggleFavourite } from '../../slices/favouriteSlice';
+=======
+import { useFavourites } from '../../hooks/useFavourites';
+>>>>>>> shared/component
 import './../../styles/HomePaper.css';
 
 interface DeckPagerProps {
@@ -13,7 +17,11 @@ interface DeckPagerProps {
 
 const DOTS_SWIPE_DISTANCE = 50;
 
+<<<<<<< HEAD
 //so shelf numbers run 01, 02, 03 across
+=======
+// Number of shelves on earlier pages, so shelf numbers run 01, 02, 03 across the whole deck
+>>>>>>> shared/component
 function pageOffset(pages: DeckPageData[], pageId: string): number {
   let count = 0;
   for (const page of pages) {
@@ -28,7 +36,11 @@ export function DeckPager({ pages, onOpenHotel }: DeckPagerProps) {
   
 
   const { currentPage } = useAppSelector((state) => state.journey);
+<<<<<<< HEAD
   const savedIds = useAppSelector((state) => state.favourites.hotelIds);
+=======
+  const { savedIds, toggle: toggleSaved } = useFavourites();
+>>>>>>> shared/component
 
   const trackRef = useRef<HTMLDivElement>(null);
   const placedOnce = useRef(false);
@@ -121,7 +133,11 @@ export function DeckPager({ pages, onOpenHotel }: DeckPagerProps) {
                             aria-label={savedIds.includes(hotel.id) ? 'Remove from favourites' : 'Save to favourites'}
                             onClick={(event) => {
                               event.stopPropagation();
+<<<<<<< HEAD
                               dispatch(toggleFavourite(hotel.id));
+=======
+                              toggleSaved(hotel.id);
+>>>>>>> shared/component
                             }}
                           >
                             {savedIds.includes(hotel.id) ? '\u2665' : '\u2661'}
