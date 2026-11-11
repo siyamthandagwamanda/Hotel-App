@@ -14,7 +14,7 @@ export class ApiError extends Error {
 export async function apiRequest<T>(
   path: string,
   token: string | null,
-  method: 'GET' | 'POST' = 'GET',
+  method: 'GET' | 'POST' | 'PATCH' | 'PUT' = 'GET',
   body?: object,
 ): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
