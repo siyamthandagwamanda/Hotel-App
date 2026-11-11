@@ -150,7 +150,7 @@ export function HotelDetailPage() {
 
   // The chosen room is the one the person picked, or else the best one.
   const pickedRoom = detail.rooms.find(
-    (room) => room.id === selectedRoomId && room.fitsParty && room.available !== false
+    (room) => room.id === selectedRoomId && room.isValid && room.available !== false
   );
   const bestRoom = detail.rooms.find((room) => room.id === detail.bestRoomId);
   const chosenRoom = pickedRoom !== undefined ? pickedRoom : bestRoom;
