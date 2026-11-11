@@ -78,6 +78,17 @@ export function AccountMenu() {
           >
             My trips
           </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="account-item"
+            onClick={() => {
+              setOpen(false);
+              navigate('/profile');
+            }}
+          >
+            Profile
+          </button>
           {user.role === 'admin' && (
             <button
               type="button"

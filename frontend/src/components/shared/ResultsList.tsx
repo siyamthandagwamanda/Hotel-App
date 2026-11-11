@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HotelCard from '../../hotel/HotelCard';
 import { useAppDispatch, useAppSelector } from '../../hooks/storeHooks';
 import { searchHotelInventory } from '../../slices/hotelSlices.js';
-import { toggleFavourite } from '../../slices/favouriteSlice';
+import { useFavourites } from '../../hooks/useFavourites';
 
 export type ResultsArgs = {
   city: string;
@@ -36,7 +36,7 @@ function ResultsChunk({ args, cursor, isLast, onLoadMore, onOpenHotel }: Results
   const dispatch = useAppDispatch();
   
 
-  const savedIds = useAppSelector((state) => state.favourites.hotelIds);
+  const { savedIds, toggle: toggleSaved } = useFavourites();
   const { searchResults, nextCursor, isLoading, error } = useAppSelector((state) => state.hotels);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ function ResultsChunk({ args, cursor, isLast, onLoadMore, onOpenHotel }: Results
             key={hotel.id}
             hotel={hotel}
             saved={savedIds.includes(hotel.id)}
-            onToggleSave={(hotelId) => dispatch(toggleFavourite(hotelId))}
+            onToggleSave={toggleSaved}
             onOpen={onOpenHotel}
           />
         ))}

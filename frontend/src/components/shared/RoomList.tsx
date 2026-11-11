@@ -1,75 +1,83 @@
-import type { RoomOption } from '../../slices/hotelDetailSlices';
-import { formatRand } from '../../utils/formatUtils';
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../hooks/storeHooks';
+import { clearReviewForm, loadReviewStatus, submitReview } from '../../slices/reviewSlice';
+import '../../styles/ReviewForm.css';
 
-interface RoomListProps {
-  rooms: RoomOption[];
-  nights: number | null;
-  chosenRoomId: number | null;
-  onSelect: (roomId: number) => void;
+interface ReviewFormProps {
+  hotelId: number;
 }
 
-function describeSleeps(room: RoomOption): string {
-  let text = 'Sleeps ' + room.adults;
-  if (room.children > 0) {
-    text = text + ' + ' + room.children + ' children';
-  }
-  if (room.bedType !== null) {
-    text = text + ' · ' + room.bedType;
-  }
-  return text;
-}
+// Lets a guest with a confirmed booking leave one review for the hotel
+export function ReviewForm({ hotelId }: ReviewFormProps) {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const { canReview, reason, saving, error } = useAppSelector((state) => state.reviewForm);
 
-export function RoomList({ rooms, nights, chosenRoomId, onSelect }: RoomListProps) {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+
+  useEffect(() => {
+    if (user !== null) {
+      dispatch(loadReviewStatus(hotelId));
+    }
+    return () => {
+      dispatch(clearReviewForm());
+    };
+  }, [dispatch, hotelId, user]);
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    dispatch(submitReview({ hotelId: hotelId, rating: rating, comment: comment }));
+  }
+
+  if (user === null) {
+    return (
+      <p className="detail-muted">
+        <Link to="/signin" state={{ from: '/hotels/' + hotelId }}>Sign in</Link> to review a hotel you have booked.
+      </p>
+    );
+  }
+  if (reason === 'already_reviewed') {
+    return <p className="detail-muted">Thank you, you have reviewed this hotel.</p>;
+  }
+  if (!canReview) {
+    return null;
+  }
+
   return (
-    <ul className="rooms">
-      {rooms.map((room) => {
-        const soldOut = room.available === false;
-        const tooSmall = !room.isValid;
-        const chosen = room.id === chosenRoomId;
-        const canSelect = !soldOut && !tooSmall;
-        const fewLeft = room.available === true && room.unitsLeft !== null && room.unitsLeft <= 3;
-
-        return (
-          // Clicking anywhere on a room picks it. The Select button does the same for keyboard users.
-          <li
-            key={room.id}
-            className={'room' + (chosen ? ' room-chosen' : '') + (canSelect ? ' room-selectable' : '')}
-            onClick={canSelect ? () => onSelect(room.id) : undefined}
+    <form className="review-form" onSubmit={handleSubmit}>
+      <p className="review-title">How was your stay?</p>
+      <div className="review-stars" role="radiogroup" aria-label="Your rating">
+        {[1, 2, 3, 4, 5].map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={rating === value}
+            aria-label={value + (value === 1 ? ' star' : ' stars')}
+            className={value <= rating ? 'review-star review-star-on' : 'review-star'}
+            onClick={() => setRating(value)}
           >
-            <div className="room-main">
-              <h3 className="room-name">{room.name}</h3>
-              <p className="room-meta">{describeSleeps(room)}</p>
-              {room.description !== null && <p className="room-meta">{room.description}</p>}
-
-              {soldOut && <span className="room-badge room-badge-bad">Sold out for your dates</span>}
-              {tooSmall && !soldOut && <span className="room-badge room-badge-bad">Too small for your group</span>}
-              {fewLeft && <span className="room-badge room-badge-warn">Only {room.unitsLeft} left</span>}
-            </div>
-
-            <div className="room-side">
-              <p>
-                <span className="room-amount">{formatRand(room.nightlyCents)}</span>
-                <span className="room-small"> / night</span>
-              </p>
-              {room.totalCents !== null && nights !== null && (
-                <p className="room-small">
-                  {formatRand(room.totalCents)} for {nights} {nights === 1 ? 'night' : 'nights'}
-                </p>
-              )}
-              <button
-                type="button"
-                className="detail-button"
-                disabled={!canSelect}
-                onClick={() => onSelect(room.id)}
-              >
-                {chosen ? 'Selected' : 'Select'}
-              </button>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+            &#9733;
+          </button>
+        ))}
+      </div>
+      <textarea
+        className="review-text"
+        rows={3}
+        maxLength={1000}
+        placeholder="Tell other guests about your stay (optional)"
+        value={comment}
+        onChange={(event) => setComment(event.target.value)}
+      />
+      {error !== null && <p className="review-error" role="alert">{error}</p>}
+      <button type="submit" className="review-submit" disabled={rating === 0 || saving}>
+        {saving ? 'Saving...' : 'Post review'}
+      </button>
+    </form>
   );
 }
 
-export default RoomList;
+export default ReviewForm;
