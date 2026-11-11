@@ -14,7 +14,7 @@ export class ApiError extends Error {
 export async function apiRequest<T>(
   path: string,
   token: string | null,
-  method: 'GET' | 'POST' | 'PATCH' | 'PUT' = 'GET',
+  method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' = 'GET',
   body?: object,
 ): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -39,5 +39,9 @@ export async function apiRequest<T>(
     throw new ApiError(response.status, message);
   }
 
+  // Some replies (like a successful delete) have no body
+  if (response.status === 204) {
+    return undefined as T;
+  }
   return (await response.json()) as T;
 }
