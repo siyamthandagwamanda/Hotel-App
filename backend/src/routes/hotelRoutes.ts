@@ -1,4 +1,5 @@
 import { Router } from 'express';
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 import { amenities, detail, reviews, rooms, search, shelves } from '../controllers/hotelControllers';
 =======
@@ -9,6 +10,10 @@ import { requireAuth } from '../middleware/auth';
 import { amenities, detail, postReview, reviews, reviewStatus, rooms, search, shelves } from '../controllers/hotelControllers';
 >>>>>>> Stashed changes
 >>>>>>> back/routes
+=======
+import { requireAuth } from '../middleware/auth';
+import { amenities, detail, postReview, reviews, reviewStatus, rooms, search, shelves } from '../controllers/hotelControllers';
+>>>>>>> Stashed changes
 
 const router = Router();
 
