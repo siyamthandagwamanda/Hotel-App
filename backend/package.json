@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx src/server.ts",
     "start": "tsx src/server.ts",
-    "make-admin": "tsx scripts/makeAdmin.ts"
+    "make-admin": "tsx src/scripts/makeAdmin.ts"
   },
   "keywords": [],
   "author": "",
